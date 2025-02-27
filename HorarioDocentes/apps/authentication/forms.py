@@ -1,12 +1,10 @@
 # -*- encoding: utf-8 -*-
-"""
-Copyright (c) 2019 - present AppSeed.us
-"""
+
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import User
-
+from django.contrib.auth.models import  AbstractUser
+from apps.home.models import CustomUser, Docente
 
 
 class LoginForm(forms.Form):
@@ -34,34 +32,38 @@ class SignUpForm(UserCreationForm):
                 "class": "form-control"
             }
         ))
-    firstname = forms.CharField(
+    first_name = forms.CharField(
         widget=forms.TextInput(
             attrs={
                 "placeholder": "Nombre",
                 "class": "form-control"
             }
-        ))
-    lastname= forms.CharField(
+        )
+    )
+    last_name = forms.CharField(
         widget=forms.TextInput(
             attrs={
                 "placeholder": "Apellido",
                 "class": "form-control"
             }
-        ))
-    status = forms.CharField(
-        widget=forms.TextInput(
+        )
+    )
+    role = forms.ChoiceField(
+        choices=CustomUser.ROLE_CHOICES,  
+        widget=forms.Select(
             attrs={
-                "placeholder": "Estatus",
                 "class": "form-control"
             }
-        ))
+        )
+    )
     email = forms.EmailField(
         widget=forms.EmailInput(
             attrs={
                 "placeholder": "Email",
                 "class": "form-control"
             }
-        ))
+        )
+    )
     password1 = forms.CharField(
         widget=forms.PasswordInput(
             attrs={
@@ -78,5 +80,10 @@ class SignUpForm(UserCreationForm):
         ))
 
     class Meta:
-        model = User
-        fields = ('username', 'email', 'password1', 'password2')
+        model = CustomUser
+        fields = ('username', 'first_name', 'last_name', 'role', 'email')
+
+class DocenteForm(forms.ModelForm):
+    class Meta:
+        model = Docente
+        fields = '__all__'

@@ -51,7 +51,7 @@
                       <div class="input-group-prepend">
                         <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
                       </div>
-                      {{ form.firstname }}
+                      {{ form.first_name }}
                     </div>
                   </div>
                   <span class="text-error">{{ form.firstname.errors }}</span>
@@ -61,7 +61,7 @@
                       <div class="input-group-prepend">
                         <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
                       </div>
-                      {{ form.lastname }}
+                      {{ form.last_name }}
                     </div>
                   </div>
                   <span class="text-error">{{ form.llastname.errors }}</span>
@@ -71,7 +71,7 @@
                       <div class="input-group-prepend">
                         <span class="input-group-text"><i class="ni ni-hat-3"></i></span>
                       </div>
-                      {{ form.status }}
+                      {{ form.role }}
                     </div>
                   </div>
                   <span class="text-error">{{ form.status.errors }}</span>
@@ -106,16 +106,7 @@
                   </div>
                   <span class="text-error">{{ form.password2.errors }}</span>
 
-                  <div class="row my-4">
-                    <div class="col-12">
-                      <div class="custom-control custom-control-alternative custom-checkbox">
-                        <input class="custom-control-input" id="customCheckRegister" type="checkbox">
-                        <label class="custom-control-label" for="customCheckRegister">
-                          <span class="text-muted">I agree with the <a href="#!">Privacy Policy</a></span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+                 
                   <div class="text-center">
                     <button type="submit" class="btn btn-primary mt-4">Crear cuenta</button>
                   </div>
@@ -135,7 +126,6 @@
           <a href="{% url 'login' %}" class="text-light"><small>Inicio de sesion</small></a>
         </div>
         <div class="col-3 text-right">
-          <a href="https://appseed.us/support" class="text-light"><small>Ayuda</small></a>
         </div>
       </div>
 

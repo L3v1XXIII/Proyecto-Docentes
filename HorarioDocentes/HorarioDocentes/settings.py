@@ -82,8 +82,12 @@ WSGI_APPLICATION = 'HorarioDocentes.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'dh',  # Reemplaza con el nombre de tu base de datos
+        'USER': 'root',  # El usuario predeterminado de MySQL en XAMPP es 'root'
+        'PASSWORD': '',  # La contraseña predeterminada de MySQL en XAMPP es vacía (puedes cambiarla en phpMyAdmin)
+        'HOST': '127.0.0.1',  # O 'localhost'
+        'PORT': '3309',  # El puerto predeterminado de MySQL
     }
 }
 
@@ -129,3 +133,5 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(CORE_DIR, 'apps/static'),
 )
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
