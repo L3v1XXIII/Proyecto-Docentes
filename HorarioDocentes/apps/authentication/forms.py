@@ -1,37 +1,35 @@
 # -*- encoding: utf-8 -*-
 
-
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth.models import  AbstractUser
-from apps.home.models import CustomUser, Docente
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from apps.home.models import User, Docente
+from django.contrib.auth import authenticate
 
 
 class LoginForm(forms.Form):
-    username = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "placeholder": "Usuario",
-                "class": "form-control"
-            }
-        ))
+    email = forms.EmailField(
+        widget=forms.TextInput(attrs={"placeholder": "Correo electrónico", "class": "form-control", "name": "email"})
+    )
     password = forms.CharField(
-        widget=forms.PasswordInput(
-            attrs={
-                "placeholder": "Contraseña",
-                "class": "form-control"
-            }
-        ))
+        widget=forms.PasswordInput(attrs={"placeholder": "Contraseña", "class": "form-control", "name": "password"})
+    )
+
+    def clean(self):
+        email = self.cleaned_data.get("email")
+        password = self.cleaned_data.get("password")
+        
+        if email and password:
+            self.user = authenticate(username=email, password=password)
+            if not self.user:
+                raise forms.ValidationError("Correo o contraseña incorrectos.")
+        
+        return self.cleaned_data
+
+    def get_user(self):
+        return self.user
 
 
 class SignUpForm(UserCreationForm):
-    username = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                "placeholder": "Usuario",
-                "class": "form-control"
-            }
-        ))
     first_name = forms.CharField(
         widget=forms.TextInput(
             attrs={
@@ -49,7 +47,7 @@ class SignUpForm(UserCreationForm):
         )
     )
     role = forms.ChoiceField(
-        choices=CustomUser.ROLE_CHOICES,  
+        choices=User.ROLE_CHOICES,  
         widget=forms.Select(
             attrs={
                 "class": "form-control"
@@ -80,8 +78,8 @@ class SignUpForm(UserCreationForm):
         ))
 
     class Meta:
-        model = CustomUser
-        fields = ('username', 'first_name', 'last_name', 'role', 'email')
+        model = User
+        fields = ('first_name', 'last_name', 'role', 'email')
 
 class DocenteForm(forms.ModelForm):
     class Meta:

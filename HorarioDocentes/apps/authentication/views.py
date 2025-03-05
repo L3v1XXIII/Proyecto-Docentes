@@ -1,75 +1,76 @@
-# -*- encoding: utf-8 -*-
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login
-from apps.home.models import Docente
-from .forms import LoginForm, SignUpForm, DocenteForm 
-
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from apps.home.models import User
+from .forms import LoginForm, SignUpForm
 
 def login_view(request):
     form = LoginForm(request.POST or None)
     msg = None
+
     if request.method == "POST":
         if form.is_valid():
-            username = form.cleaned_data.get("username")
-            password = form.cleaned_data.get("password")
-            print("Username:", username)
-            print("Password:", password)
-            user = authenticate(username=username, password=password)
-            print("User:", user)
+            user = form.get_user()  # Obtener el usuario autenticado
+            
+            print(f"Usuario autenticado: {user}")
+
             if user is not None:
                 login(request, user)
-                return redirect("/")
+                print(f"Usuario {user.email} autenticado correctamente")
+                return redirect_dashboard(user)
             else:
-                msg = 'Invalid credentials'
+                msg = 'Datos incorrectos'
+                print("Autenticación fallida. Credenciales incorrectas.")
         else:
-            msg = 'Error validating the form'
+            msg = 'Error en el formulario de login'
+            print(f"Errores en el formulario: {form.errors}")
+
     return render(request, "accounts/login.html", {"form": form, "msg": msg})
 
-def register_user(request):
+
+
+def register_view(request):
+    form = SignUpForm(request.POST or None)
     msg = None
     success = False
     if request.method == "POST":
-        form = SignUpForm(request.POST)
         if form.is_valid():
-            form.save()
-            msg = 'User created - please <a href="/login">login</a>.'
-            success = True
+            user = form.save()
+            messages.success(request, "Usuario registrado con éxito. Ahora puedes iniciar sesión.")
+            return redirect("login")  # Redirigir a la página de login
         else:
-            msg = 'Form is not valid'
-    else:
-        form = SignUpForm()
+            msg = "Hubo un error en el formulario"
     return render(request, "accounts/register.html", {"form": form, "msg": msg, "success": success})
- 
 
-def docente_list(request):
-    docentes = Docente.objects.all()
-    return render(request, 'Docentes/docente_list.html', {'docentes': docentes})
 
-def docente_create(request):
-    if request.method == 'POST':
-        form = DocenteForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('docente_list')
-    else:
-        form = DocenteForm()
-    return render(request, 'Docentes/docente_form.html', {'form': form})
+@login_required
+def logout_view(request):
+    logout(request)
+    messages.info(request, "Has cerrado sesión correctamente.")
+    return redirect("login")
 
-def docente_update(request, pk):
-    docente = get_object_or_404(Docente, pk=pk)
-    if request.method == 'POST':
-        form = DocenteForm(request.POST, instance=docente)
-        if form.is_valid():
-            form.save()
-            return redirect('Docente_list')
-    else:
-        form = DocenteForm(instance=docente)
-    return render(request, 'Docentes/docente_form.html', {'form': form})
 
-def docente_delete(request, pk):
-    docente = get_object_or_404(Docente, pk=pk)
-    if request.method == 'POST':
-        docente.delete()
-        return redirect('docente_list')
-    return render(request, 'Docentes/docente_confirm_delete.html', {'docente': docente})
+def redirect_dashboard(user):
+    if user.role == 'superadmin':
+        return redirect('superadmin_dashboard')
+    elif user.role == 'admin':
+        return redirect('admin_dashboard')
+    elif user.role == 'docente':
+        return redirect('docente_dashboard')
+    return redirect('/')  # En caso de algún error
+
+
+@login_required
+def superadmin_dashboard(request):
+    return render(request, 'dashboards/dash_sp.html')
+
+
+@login_required
+def admin_dashboard(request):
+    return render(request, 'dashboards/dash_admin.html')
+
+
+@login_required
+def docente_dashboard(request):
+    return render(request, 'dashboards/dash_docente.html')
