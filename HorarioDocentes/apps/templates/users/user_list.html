@@ -1,0 +1,31 @@
+{% extends 'layouts/base-admin.html' %}
+
+{% block title %}Lista de Usuarios{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Lista de Usuarios</h2>
+    <a href="{% url 'user_create' %}" class="btn btn-primary mb-3">Agregar Usuario</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role }}</td>
+                <td>
+                    <a href="{% url 'user_update' user.id %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'user_delete' user.id %}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

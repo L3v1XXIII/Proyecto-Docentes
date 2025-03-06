@@ -1,47 +1,37 @@
-{% extends 'layouts/base.html' %}
+{% extends 'layouts/base-admin.html' %}
 
-{% block title %} Lista de Docentes {% endblock title %}
+{% block title %}Lista de Docentes{% endblock %}
 
 {% block content %}
-<div class="header bg-gradient-primary pb-8 pt-5 pt-md-8">
-    <div class="container-fluid">
-        <div class="header-body">
-            <div class="row">
-                <div class="col">
-                    <div class="card shadow">
-                        <div class="card-header border-0">
-                            <h3 class="mb-0">Lista de Docentes</h3>
-                            <a href="{% url 'docente_create' %}" class="btn btn-sm btn-primary">Crear Docente</a>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table align-items-center table-flush">
-                                <thead class="thead-light">
-                                    <tr>
-                                        <th scope="col">Nombre</th>
-                                        <th scope="col">Apellido Paterno</th>
-                                        <th scope="col">Apellido Materno</th>
-                                        <th scope="col">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for docente in docentes %}
-                                    <tr>
-                                        <td>{{ docente.nombre }}</td>
-                                        <td>{{ docente.apellido_paterno }}</td>
-                                        <td>{{ docente.apellido_materno }}</td>
-                                        <td>
-                                            <a href="{% url 'docente_update' docente.pk %}" class="btn btn-sm btn-info">Editar</a>
-                                            <a href="{% url 'docente_delete' docente.pk %}" class="btn btn-sm btn-danger">Eliminar</a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="container mt-5">
+    <h2>Lista de Docentes</h2>
+    <a href="{% url 'docente_create' %}" class="btn btn-primary mb-3">Agregar Docente</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellido Paterno</th>
+                <th>Apellido Materno</th>
+                <th>Email</th>
+                <th>Teléfono</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for docente in docentes %}
+            <tr>
+                <td>{{ docente.nombre }}</td>
+                <td>{{ docente.apellido_paterno }}</td>
+                <td>{{ docente.apellido_materno }}</td>
+                <td>{{ docente.email }}</td>
+                <td>{{ docente.telefono }}</td>
+                <td>
+                    <a href="{% url 'docente_update' docente.id %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'docente_delete' docente.id %}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock content %}

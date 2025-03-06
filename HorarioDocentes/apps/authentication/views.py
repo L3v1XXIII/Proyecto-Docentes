@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from apps.home.models import User
-from .forms import LoginForm, SignUpForm
+from apps.home.models import User, Docente
+from .forms import LoginForm, SignUpForm, DocenteForm
 
 def login_view(request):
     form = LoginForm(request.POST or None)
@@ -74,3 +74,81 @@ def admin_dashboard(request):
 @login_required
 def docente_dashboard(request):
     return render(request, 'dashboards/dash_docente.html')
+
+@login_required
+def user_list(request):
+    users = User.objects.all()
+    return render(request, 'users/user_list.html', {'users': users})
+
+@login_required
+def user_create(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Usuario creado exitosamente.")
+            return redirect('user_list')
+    else:
+        form = SignUpForm()
+    return render(request, 'users/user_form.html', {'form': form})
+
+@login_required
+def user_update(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        form = SignUpForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Usuario actualizado exitosamente.")
+            return redirect('user_list')
+    else:
+        form = SignUpForm(instance=user)
+    return render(request, 'users/user_form.html', {'form': form})
+
+@login_required
+def user_delete(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, "Usuario eliminado exitosamente.")
+        return redirect('user_list')
+    return render(request, 'users/user_confirm_delete.html', {'user': user})
+
+@login_required
+def docente_list(request):
+    docentes = Docente.objects.all()
+    return render(request, 'Docentes/docente_list.html', {'docentes': docentes})
+
+@login_required
+def docente_create(request):
+    if request.method == 'POST':
+        form = DocenteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Docente creado exitosamente.")
+            return redirect('docente_list')
+    else:
+        form = DocenteForm()
+    return render(request, 'Docentes/docente_form.html', {'form': form})
+
+@login_required
+def docente_update(request, pk):
+    docente = get_object_or_404(Docente, pk=pk)
+    if request.method == 'POST':
+        form = DocenteForm(request.POST, instance=docente)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Docente actualizado exitosamente.")
+            return redirect('docente_list')
+    else:
+        form = DocenteForm(instance=docente)
+    return render(request, 'Docentes/docente_form.html', {'form': form})
+
+@login_required
+def docente_delete(request, pk):
+    docente = get_object_or_404(Docente, pk=pk)
+    if request.method == 'POST':
+        docente.delete()
+        messages.success(request, "Docente eliminado exitosamente.")
+        return redirect('docente_list')
+    return render(request, 'docentes/docente_confirm_delete.html', {'docente': docente})

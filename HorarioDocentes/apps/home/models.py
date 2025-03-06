@@ -55,6 +55,8 @@ class Carrera(models.Model):
 
     def __str__(self):
         return self.nombre
+    
+    
 
 # Modelo de Administrador
 class Administrador(models.Model):
@@ -77,8 +79,8 @@ class Docente(models.Model):
     matricula = models.CharField(max_length=10)
     CURP = models.CharField(max_length=18)
     RFC = models.CharField(max_length=13)
-    comprobante_domicilio = models.CharField(max_length=255)
-    titulo = models.CharField(max_length=255)
+    comprobante_domicilio = models.FileField(upload_to='comprobantes_domicilio/', null=True, blank=True)
+    titulo = models.FileField(upload_to='titulos/', null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'docente'})
 
     def __str__(self):

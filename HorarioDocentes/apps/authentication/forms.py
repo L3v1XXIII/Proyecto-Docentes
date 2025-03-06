@@ -82,6 +82,64 @@ class SignUpForm(UserCreationForm):
         fields = ('first_name', 'last_name', 'role', 'email')
 
 class DocenteForm(forms.ModelForm):
+    nombre = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Nombre", "class": "form-control"}
+        )
+    )
+    apellido_paterno = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Apellido Paterno", "class": "form-control"}
+        )
+    )
+    apellido_materno = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Apellido Materno", "class": "form-control"}
+        )
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={"placeholder": "Correo Electrónico", "class": "form-control"}
+        )
+    )
+    telefono = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Teléfono", "class": "form-control"}
+        )
+    )
+    area = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Área", "class": "form-control"}
+        )
+    )
+    matricula = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Matrícula", "class": "form-control"}
+        )
+    )
+    CURP = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "CURP", "class": "form-control"}
+        )
+    )
+    RFC = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "RFC", "class": "form-control"}
+        )
+    )
+    comprobante_domicilio = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={"class": "form-control-file"}
+        ),
+        required=False
+    )
+    titulo = forms.FileField(
+        widget=forms.ClearableFileInput(
+            attrs={"class": "form-control-file"}
+        ),
+        required=False
+    )
+
     class Meta:
         model = Docente
-        fields = '__all__'
+        fields = ["nombre", "apellido_paterno", "apellido_materno", "email", "telefono", "area", "matricula", "CURP", "RFC", "comprobante_domicilio", "titulo"]
