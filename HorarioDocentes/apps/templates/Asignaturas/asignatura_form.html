@@ -1,0 +1,15 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Formulario de Asignatura{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>{% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Asignatura</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">Guardar</button>
+        <a href="{% url 'asignatura_list' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock content %}

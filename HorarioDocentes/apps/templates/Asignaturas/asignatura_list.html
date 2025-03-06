@@ -1,0 +1,31 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Lista de Asignaturas{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Lista de Asignaturas</h2>
+    <a href="{% url 'asignatura_create' %}" class="btn btn-primary mb-3">Agregar Asignatura</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asignatura in asignaturas %}
+            <tr>
+                <td>{{ asignatura.codigo }}</td>
+                <td>{{ asignatura.nombre }}</td>
+                <td>
+                    <a href="{% url 'asignatura_update' asignatura.id %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'asignatura_delete' asignatura.id %}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

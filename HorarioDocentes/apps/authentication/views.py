@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from apps.home.models import User, Docente
-from .forms import LoginForm, SignUpForm, DocenteForm
+from apps.home.models import User, Docente, Asignatura, Carrera
+from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm
 
 def login_view(request):
     form = LoginForm(request.POST or None)
@@ -152,3 +152,81 @@ def docente_delete(request, pk):
         messages.success(request, "Docente eliminado exitosamente.")
         return redirect('docente_list')
     return render(request, 'docentes/docente_confirm_delete.html', {'docente': docente})
+
+@login_required
+def asignatura_list(request):
+    asignaturas = Asignatura.objects.all()
+    return render(request, 'asignaturas/asignatura_list.html', {'asignaturas': asignaturas})
+
+@login_required
+def asignatura_create(request):
+    if request.method == 'POST':
+        form = AsignaturaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Asignatura creada exitosamente.")
+            return redirect('asignatura_list')
+    else:
+        form = AsignaturaForm()
+    return render(request, 'asignaturas/asignatura_form.html', {'form': form})
+
+@login_required
+def asignatura_update(request, pk):
+    asignatura = get_object_or_404(Asignatura, pk=pk)
+    if request.method == 'POST':
+        form = AsignaturaForm(request.POST, instance=asignatura)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Asignatura actualizada exitosamente.")
+            return redirect('asignatura_list')
+    else:
+        form = AsignaturaForm(instance=asignatura)
+    return render(request, 'asignaturas/asignatura_form.html', {'form': form})
+
+@login_required
+def asignatura_delete(request, pk):
+    asignatura = get_object_or_404(Asignatura, pk=pk)
+    if request.method == 'POST':
+        asignatura.delete()
+        messages.success(request, "Asignatura eliminada exitosamente.")
+        return redirect('asignatura_list')
+    return render(request, 'asignaturas/asignatura_confirm_delete.html', {'asignatura': asignatura})
+
+@login_required
+def carrera_list(request):
+    carreras = Carrera.objects.all()
+    return render(request, 'carreras/carrera_list.html', {'carreras': carreras})
+
+@login_required
+def carrera_create(request):
+    if request.method == 'POST':
+        form = CarreraForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Carrera creada exitosamente.")
+            return redirect('carrera_list')
+    else:
+        form = CarreraForm()
+    return render(request, 'carreras/carrera_form.html', {'form': form})
+
+@login_required
+def carrera_update(request, pk):
+    carrera = get_object_or_404(Carrera, pk=pk)
+    if request.method == 'POST':
+        form = CarreraForm(request.POST, instance=carrera)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Carrera actualizada exitosamente.")
+            return redirect('carrera_list')
+    else:
+        form = CarreraForm(instance=carrera)
+    return render(request, 'carreras/carrera_form.html', {'form': form})
+
+@login_required
+def carrera_delete(request, pk):
+    carrera = get_object_or_404(Carrera, pk=pk)
+    if request.method == 'POST':
+        carrera.delete()
+        messages.success(request, "Carrera eliminada exitosamente.")
+        return redirect('carrera_list')
+    return render(request, 'carreras/carrera_confirm_delete.html', {'carrera': carrera})

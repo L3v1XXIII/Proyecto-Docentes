@@ -1,0 +1,31 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Lista de Carreras{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Lista de Carreras</h2>
+    <a href="{% url 'carrera_create' %}" class="btn btn-primary mb-3">Agregar Carrera</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for carrera in carreras %}
+            <tr>
+                <td>{{ carrera.codigo }}</td>
+                <td>{{ carrera.nombre }}</td>
+                <td>
+                    <a href="{% url 'carrera_update' carrera.id %}" class="btn btn-warning">Editar</a>
+                    <a href="{% url 'carrera_delete' carrera.id %}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock content %}

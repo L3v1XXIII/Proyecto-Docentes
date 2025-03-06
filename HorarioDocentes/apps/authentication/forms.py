@@ -2,7 +2,7 @@
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from apps.home.models import User, Docente
+from apps.home.models import User, Docente, Asignatura, Carrera
 from django.contrib.auth import authenticate
 
 
@@ -143,3 +143,39 @@ class DocenteForm(forms.ModelForm):
     class Meta:
         model = Docente
         fields = ["nombre", "apellido_paterno", "apellido_materno", "email", "telefono", "area", "matricula", "CURP", "RFC", "comprobante_domicilio", "titulo"]
+
+class AsignaturaForm(forms.ModelForm):
+    codigo = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Código de la asignatura", "class": "form-control"}
+        )
+    )
+    nombre = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Nombre de la asignatura", "class": "form-control"}
+        )
+    )
+    carrera = forms.ModelChoiceField(
+        queryset=Carrera.objects.all(),
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    
+    class Meta:
+        model = Asignatura
+        fields = ["codigo", "nombre", "carrera"]
+    
+class CarreraForm(forms.ModelForm):
+    codigo = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Código de la carrera", "class": "form-control"}
+        )
+    )
+    nombre = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Nombre de la carrera", "class": "form-control"}
+        )
+    )
+    
+    class Meta:
+        model = Carrera
+        fields = ["codigo", "nombre"]
