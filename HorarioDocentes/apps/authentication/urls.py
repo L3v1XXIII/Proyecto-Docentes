@@ -4,7 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from django.urls import path
-from .views import login_view, register_view, logout_view, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, asignatura_create, asignatura_delete, asignatura_list, asignatura_update, carrera_create, carrera_delete, carrera_list, carrera_update
+from .views import login_view, register_view, logout_view, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, asignatura_create, asignatura_delete, asignatura_list, asignatura_update, carrera_create, carrera_delete, carrera_list, carrera_update, horario_create, horario_delete, horario_list, horario_update
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -35,4 +35,9 @@ urlpatterns = [
     path('carreras/create/', carrera_create, name='carrera_create'),
     path('carreras/update/<int:pk>/', carrera_update, name='carrera_update'),
     path('carreras/delete/<int:pk>/', carrera_delete, name='carrera_delete'),
+    
+    path('horarios/', horario_list, name='horario_list'),
+    path('horarios/create/', horario_create, name='horario_create'),
+    path('horarios/update/<int:pk>/', horario_update, name='horario_update'),
+    path('horarios/delete/<int:pk>/', horario_delete, name='horario_delete'),
 ]

@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from apps.home.models import User, Docente, Asignatura, Carrera
-from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm
+from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
+from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm
 
 def login_view(request):
     form = LoginForm(request.POST or None)
@@ -121,15 +123,25 @@ def docente_list(request):
 
 @login_required
 def docente_create(request):
-    if request.method == 'POST':
-        form = DocenteForm(request.POST)
+    if request.method == "POST":
+        form = DocenteForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            docente = form.save(commit=False)
+            # Verifica si el usuario ya existe, si no, créalo automáticamente
+            if not docente.user:
+                docente.user = User.objects.create(
+                    email=docente.email,
+                    role="docente"
+                )
+            docente.save()
             messages.success(request, "Docente creado exitosamente.")
             return redirect('docente_list')
+        else:
+            print("Errores en el formulario:", form.errors)  # Para depuración
     else:
         form = DocenteForm()
-    return render(request, 'Docentes/docente_form.html', {'form': form})
+    
+    return render(request, 'docentes/docente_form.html', {"form": form})
 
 @login_required
 def docente_update(request, pk):
@@ -230,3 +242,47 @@ def carrera_delete(request, pk):
         messages.success(request, "Carrera eliminada exitosamente.")
         return redirect('carrera_list')
     return render(request, 'carreras/carrera_confirm_delete.html', {'carrera': carrera})
+
+@login_required
+def horario_list(request):
+    horarios = Horario.objects.all()
+    return render(request, 'horarios/horario_list.html', {'horarios': horarios})
+
+@login_required
+def horario_create(request):
+    if request.method == 'POST':
+        form = HorarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Horario creado exitosamente.")
+            return redirect('horario_list')
+    else:
+        form = HorarioForm()
+    return render(request, 'horarios/horario_form.html', {'form': form})
+
+@login_required
+def horario_update(request, pk):
+    horario = get_object_or_404(Horario, pk=pk)
+    if request.method == 'POST':
+        form = HorarioForm(request.POST, instance=horario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Horario actualizado exitosamente.")
+            return redirect('horario_list')
+    else:
+        form = HorarioForm(instance=horario)
+    return render(request, 'horarios/horario_form.html', {'form': form})
+
+@login_required
+def horario_delete(request, pk):
+    horario = get_object_or_404(Horario, pk=pk)
+    if request.method == 'POST':
+        horario.delete()
+        messages.success(request, "Horario eliminado exitosamente.")
+        return redirect('horario_list')
+    return render(request, 'horarios/horario_confirm_delete.html', {'horario': horario})
+
+@receiver(post_save, sender=User)
+def crear_administrador(sender, instance, created, **kwargs):
+    if created and instance.role == 'admin':
+        Administrador.objects.create(user=instance)

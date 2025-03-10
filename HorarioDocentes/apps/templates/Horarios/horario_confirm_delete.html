@@ -1,15 +1,15 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Eliminar Usuario{% endblock %}
+{% block title %}Eliminar Horario{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <h2>Confirmar Eliminación</h2>
-    <p>¿Estás seguro de que deseas eliminar al usuario <strong>{{ user.email }}</strong>?</p>
+    <p>¿Estás seguro de que deseas eliminar el horario de <strong>{{ horario.docente.nombre }}</strong>?</p>
     <form method="POST">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Eliminar</button>
-        <a href="{% url 'user_list' %}" class="btn btn-secondary">Cancelar</a>
+        <a href="{% url 'horario_list' %}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
 {% endblock content %}

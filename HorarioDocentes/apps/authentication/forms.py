@@ -2,7 +2,7 @@
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from apps.home.models import User, Docente, Asignatura, Carrera
+from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
 from django.contrib.auth import authenticate
 
 
@@ -82,6 +82,10 @@ class SignUpForm(UserCreationForm):
         fields = ('first_name', 'last_name', 'role', 'email')
 
 class DocenteForm(forms.ModelForm):
+    user = forms.ModelChoiceField(
+        queryset=User.objects.filter(role="docente"),  # Filtra solo usuarios con rol de docente
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
     nombre = forms.CharField(
         widget=forms.TextInput(
             attrs={"placeholder": "Nombre", "class": "form-control"}
@@ -111,6 +115,10 @@ class DocenteForm(forms.ModelForm):
         widget=forms.TextInput(
             attrs={"placeholder": "Área", "class": "form-control"}
         )
+    )
+    administrador = forms.ModelChoiceField(
+        queryset=Administrador.objects.all(),
+        widget=forms.Select(attrs={"class": "form-control"})
     )
     matricula = forms.CharField(
         widget=forms.TextInput(
@@ -142,7 +150,7 @@ class DocenteForm(forms.ModelForm):
 
     class Meta:
         model = Docente
-        fields = ["nombre", "apellido_paterno", "apellido_materno", "email", "telefono", "area", "matricula", "CURP", "RFC", "comprobante_domicilio", "titulo"]
+        fields = ["user", "nombre", "apellido_paterno", "apellido_materno", "email", "telefono", "area", "matricula", "CURP", "RFC", "comprobante_domicilio", "titulo", "administrador"]
 
 class AsignaturaForm(forms.ModelForm):
     codigo = forms.CharField(
@@ -179,3 +187,26 @@ class CarreraForm(forms.ModelForm):
     class Meta:
         model = Carrera
         fields = ["codigo", "nombre"]
+
+class HorarioForm(forms.ModelForm):
+    docente = forms.ModelChoiceField(
+        queryset=Docente.objects.all(),
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    carrera = forms.ModelChoiceField(
+        queryset=Carrera.objects.all(),
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    dia = forms.DateField(
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"})
+    )
+    hora_inicio = forms.TimeField(
+        widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"})
+    )
+    hora_fin = forms.TimeField(
+        widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"})
+    )
+    
+    class Meta:
+        model = Horario
+        fields = ["docente", "carrera", "dia", "hora_inicio", "hora_fin"]
