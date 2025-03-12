@@ -243,44 +243,41 @@ def carrera_delete(request, pk):
         return redirect('carrera_list')
     return render(request, 'carreras/carrera_confirm_delete.html', {'carrera': carrera})
 
-@login_required
 def horario_list(request):
     horarios = Horario.objects.all()
     return render(request, 'horarios/horario_list.html', {'horarios': horarios})
 
-@login_required
 def horario_create(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = HorarioForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, "Horario creado exitosamente.")
-            return redirect('horario_list')
+            return redirect("horario_list")
     else:
         form = HorarioForm()
-    return render(request, 'horarios/horario_form.html', {'form': form})
+    return render(request, "horarios/horario_form.html", {"form": form})
 
-@login_required
 def horario_update(request, pk):
     horario = get_object_or_404(Horario, pk=pk)
-    if request.method == 'POST':
+    if request.method == "POST":
         form = HorarioForm(request.POST, instance=horario)
         if form.is_valid():
             form.save()
             messages.success(request, "Horario actualizado exitosamente.")
-            return redirect('horario_list')
+            return redirect("horario_list")
     else:
         form = HorarioForm(instance=horario)
-    return render(request, 'horarios/horario_form.html', {'form': form})
+    return render(request, "horarios/horario_form.html", {"form": form})
 
-@login_required
 def horario_delete(request, pk):
     horario = get_object_or_404(Horario, pk=pk)
-    if request.method == 'POST':
+    if request.method == "POST":
         horario.delete()
-        messages.success(request, "Horario eliminado exitosamente.")
-        return redirect('horario_list')
-    return render(request, 'horarios/horario_confirm_delete.html', {'horario': horario})
+        messages.success(request, "Horario eliminado correctamente.")
+        return redirect("horario_list")
+    return render(request, "horarios/horario_confirm_delete.html", {"horario": horario})
+
 
 @receiver(post_save, sender=User)
 def crear_administrador(sender, instance, created, **kwargs):

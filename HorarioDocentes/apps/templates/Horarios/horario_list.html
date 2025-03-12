@@ -1,4 +1,3 @@
-<!-- horario_list.html -->
 {% extends 'layouts/base.html' %}
 
 {% block title %}Lista de Horarios{% endblock %}
@@ -7,23 +6,31 @@
 <div class="container mt-5">
     <h2>Calendario de Horarios</h2>
     <a href="{% url 'horario_create' %}" class="btn btn-primary mb-3">Agregar Horario</a>
-    <div id='calendar'></div>
+    <div id="calendar"></div>
 </div>
+{% endblock content %}
 
-<!-- FullCalendar Script -->
-<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css' />
-<script src='https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.js'></script>
+{% block javascripts %}
+<!-- FullCalendar Styles & Scripts -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.js"></script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var calendarEl = document.getElementById('calendar');
+    document.addEventListener("DOMContentLoaded", function () {
+        var calendarEl = document.getElementById("calendar");
         var calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'timeGridWeek',
+            initialView: "timeGridWeek",
+            headerToolbar: {
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay"
+            },
             events: [
                 {% for horario in horarios %}
                 {
-                    title: "{{ horario.docente.nombre }} - {{ horario.carrera.nombre }}",
-                    start: "{{ horario.dia }}T{{ horario.hora_inicio }}",
-                    end: "{{ horario.dia }}T{{ horario.hora_fin }}"
+                    title: "{{ horario.asignatura.nombre }} - {{ horario.carrera.nombre }}",
+                    start: "{{ horario.dia|date:'Y-m-d' }}T{{ horario.hora_inicio }}",
+                    end: "{{ horario.dia|date:'Y-m-d' }}T{{ horario.hora_fin }}"
                 },
                 {% endfor %}
             ]
@@ -31,4 +38,4 @@
         calendar.render();
     });
 </script>
-{% endblock content %}
+{% endblock javascripts %}

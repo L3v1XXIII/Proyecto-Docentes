@@ -4,7 +4,10 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
 from django.contrib.auth import authenticate
-
+from django.core.exceptions import ValidationError
+from datetime import datetime, date
+from django.db import models
+from django.db.models import Sum
 
 class LoginForm(forms.Form):
     email = forms.EmailField(
@@ -189,16 +192,20 @@ class CarreraForm(forms.ModelForm):
         fields = ["codigo", "nombre"]
 
 class HorarioForm(forms.ModelForm):
-    docente = forms.ModelChoiceField(
-        queryset=Docente.objects.all(),
+    asignatura = forms.ModelChoiceField(
+        queryset=Asignatura.objects.all(),
         widget=forms.Select(attrs={"class": "form-control"})
     )
     carrera = forms.ModelChoiceField(
         queryset=Carrera.objects.all(),
         widget=forms.Select(attrs={"class": "form-control"})
     )
-    dia = forms.DateField(
-        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"})
+    dia = forms.ChoiceField(
+        choices=[
+            ('Lunes', 'Lunes'), ('Martes', 'Martes'), ('Miércoles', 'Miércoles'),
+            ('Jueves', 'Jueves'), ('Viernes', 'Viernes'), ('Sábado', 'Sábado')
+        ],
+        widget=forms.Select(attrs={"class": "form-control"})
     )
     hora_inicio = forms.TimeField(
         widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"})
@@ -206,7 +213,42 @@ class HorarioForm(forms.ModelForm):
     hora_fin = forms.TimeField(
         widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"})
     )
-    
+
     class Meta:
         model = Horario
-        fields = ["docente", "carrera", "dia", "hora_inicio", "hora_fin"]
+        fields = ["asignatura", "carrera", "dia", "hora_inicio", "hora_fin"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        asignatura = cleaned_data.get("asignatura")
+        hora_inicio = cleaned_data.get("hora_inicio")
+        hora_fin = cleaned_data.get("hora_fin")
+
+        if not asignatura or not hora_inicio or not hora_fin:
+            return cleaned_data  # Evita validaciones si algún campo está vacío
+
+        # 🔹 Convertimos `hora_inicio` y `hora_fin` a `datetime`
+        base_date = date.today()
+        hora_inicio_dt = datetime.combine(base_date, hora_inicio)
+        hora_fin_dt = datetime.combine(base_date, hora_fin)
+
+        # 🔹 Validar que la hora de fin es mayor a la de inicio
+        if hora_fin_dt <= hora_inicio_dt:
+            raise ValidationError("La hora de fin debe ser después de la hora de inicio.")
+
+        # 🔹 Calcular la duración en horas del nuevo horario
+        duracion_nueva = (hora_fin_dt - hora_inicio_dt).total_seconds() / 3600
+
+        # 🔹 Obtener el total de horas de la asignatura
+        total_horas_existente = Horario.objects.filter(asignatura=asignatura).aggregate(
+            total_horas=Sum('hora_fin') - Sum('hora_inicio')
+        )['total_horas']
+
+        # 🔹 Convertir total_horas_existente a horas
+        total_horas_existente = total_horas_existente.total_seconds() / 3600 if total_horas_existente else 0
+
+        # 🔹 Verificar que no se excedan las 3 horas semanales
+        if total_horas_existente + duracion_nueva > 3:
+            raise ValidationError("No se pueden asignar más de 3 horas semanales a esta asignatura.")
+
+        return cleaned_data

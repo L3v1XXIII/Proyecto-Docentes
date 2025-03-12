@@ -97,13 +97,27 @@ class Asignatura(models.Model):
 
 # Modelo de Horarios
 class Horario(models.Model):
-    dia = models.CharField(max_length=20)
+    DIAS_SEMANA = [
+        ('Lunes', 'Lunes'), ('Martes', 'Martes'), ('Miércoles', 'Miércoles'),
+        ('Jueves', 'Jueves'), ('Viernes', 'Viernes'), ('Sábado', 'Sábado')
+    ]
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE)
+    dia = models.CharField(max_length=20, choices=DIAS_SEMANA)
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
     carrera = models.ForeignKey(Carrera, on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        total_horas = Horario.objects.filter(asignatura=self.asignatura).aggregate(models.Sum(models.F('hora_fin') - models.F('hora_inicio')))
+        total_horas_semana = total_horas['hora_fin__sum'] if total_horas['hora_fin__sum'] else 0
+        if total_horas_semana + (self.hora_fin.hour - self.hora_inicio.hour) > 3:
+            raise ValueError("No se pueden asignar más de 3 horas semanales a una asignatura.")
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.dia} {self.hora_inicio} - {self.hora_fin}"
+        return f"{self.asignatura.nombre} - {self.dia} {self.hora_inicio} - {self.hora_fin}"
+
+
 
 # Asignación de Docentes a Horarios y Asignaturas
 class Asignacion(models.Model):
