@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
 from django.contrib.auth import authenticate
 
@@ -251,3 +251,17 @@ class AdministradorForm(forms.ModelForm):
                     raise forms.ValidationError(f"La carrera {carrera.nombre} ya tiene un administrador asignado.")
         
         return cleaned_data
+
+class CambiarContraseñaForm(PasswordChangeForm):
+    old_password = forms.CharField(
+        label="Contraseña Actual",
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Contraseña actual"})
+    )
+    new_password1 = forms.CharField(
+        label="Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Nueva contraseña"})
+    )
+    new_password2 = forms.CharField(
+        label="Confirmar Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Confirmar nueva contraseña"})
+    )

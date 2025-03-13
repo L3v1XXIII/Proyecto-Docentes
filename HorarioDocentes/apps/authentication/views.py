@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
-from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm
+from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm, CambiarContraseñaForm
 from django.http import JsonResponse
 
 def login_view(request):
@@ -331,3 +331,23 @@ def administrador_delete(request, pk):
         administrador.delete()
         return redirect('administrador_list')
     return render(request, 'Administradores/administrador_confirm_delete.html', {'administrador': administrador})
+
+@login_required
+def perfil_usuario(request):
+    return render(request, 'perfil/perfil_usuario.html', {'user': request.user})
+
+@login_required
+def cambiar_contraseña(request):
+    if request.method == 'POST':
+        form = CambiarContraseñaForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Mantiene la sesión después del cambio de contraseña
+            messages.success(request, "Contraseña actualizada correctamente.")
+            return redirect('perfil_usuario')
+        else:
+            messages.error(request, "Por favor, corrige los errores.")
+    else:
+        form = CambiarContraseñaForm(user=request.user)
+
+    return render(request, 'perfil/cambiar_contraseña.html', {'form': form})

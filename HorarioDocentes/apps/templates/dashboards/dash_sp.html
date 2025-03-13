@@ -17,7 +17,7 @@
                         Bienvenido, <strong>{{ user.first_name|default:"Usuario" }}</strong> 🎉
                     </h1>
                     <p class="text-white-50">
-                        Sistema de Gestión de Horario Docente - Administra horarios, asignaturas y más.
+                        Sistema de Gestión de Horario Docente - Administra usuarios, coordinadores y reportes.
                     </p>
                 </div>
             </div>
@@ -28,30 +28,35 @@
 <!-- Contenido del Dashboard -->
 <div class="container-fluid mt-4">
     <div class="row">
+        <!-- Usuarios -->
         <div class="col-lg-4">
             <div class="card shadow border-0">
                 <div class="card-body">
-                    <h5 class="card-title text-primary"><i class="fas fa-calendar-alt"></i> Horarios</h5>
-                    <p class="card-text">Gestiona los horarios de los docentes y asignaturas.</p>
-                    <a href="{% url 'horario_list' %}" class="btn btn-primary btn-sm">Ver Horarios</a>
+                    <h5 class="card-title text-primary"><i class="fas fa-user"></i> Usuarios</h5>
+                    <p class="card-text">Gestiona y administra los usuarios del sistema.</p>
+                    <a href="{% url 'user_list' %}" class="btn btn-primary btn-sm">Ver Usuarios</a>
                 </div>
             </div>
         </div>
+
+        <!-- Coordinadores -->
         <div class="col-lg-4">
             <div class="card shadow border-0">
                 <div class="card-body">
-                    <h5 class="card-title text-primary"><i class="fas fa-book"></i> Asignaturas</h5>
-                    <p class="card-text">Consulta y administra las asignaturas registradas.</p>
-                    <a href="{% url 'asignatura_list' %}" class="btn btn-primary btn-sm">Ver Asignaturas</a>
+                    <h5 class="card-title text-primary"><i class="fas fa-user-tie"></i> Coordinadores</h5>
+                    <p class="card-text">Consulta y administra los coordinadores de carreras.</p>
+                    <a href="{% url 'administrador_list' %}" class="btn btn-primary btn-sm">Ver Coordinadores</a>
                 </div>
             </div>
         </div>
+
+        <!-- Reportes -->
         <div class="col-lg-4">
             <div class="card shadow border-0">
                 <div class="card-body">
-                    <h5 class="card-title text-primary"><i class="fas fa-users"></i> Docentes</h5>
-                    <p class="card-text">Administra los docentes y sus horarios asignados.</p>
-                    <a href="{% url 'docente_list' %}" class="btn btn-primary btn-sm">Ver Docentes</a>
+                    <h5 class="card-title text-primary"><i class="fas fa-chart-line"></i> Reportes</h5>
+                    <p class="card-text">Genera y consulta reportes de carga académica y gestión.</p>
+                    <a href="#" class="btn btn-primary btn-sm disabled">Próximamente</a>
                 </div>
             </div>
         </div>

@@ -5,7 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 
 from django.urls import path
 from .views import filter_asignaturas, asignatura_create, asignatura_delete, asignatura_list, asignatura_update, carrera_create, carrera_delete, carrera_list, carrera_update, horario_create, horario_delete, horario_list, horario_update, administrador_create, administrador_delete, administrador_list, administrador_update
-from .views import login_view, register_view, logout_view, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update
+from .views import login_view, register_view, logout_view, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, perfil_usuario, cambiar_contraseña
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -47,4 +47,7 @@ urlpatterns = [
     path('administradores/create/', administrador_create, name='administrador_create'),
     path('administradores/update/<int:pk>/', administrador_update, name='administrador_update'),
     path('administradores/delete/<int:pk>/', administrador_delete, name='administrador_delete'),
+    
+    path('perfil/', perfil_usuario, name='perfil_usuario'),
+    path('perfil/cambiar-contraseña/', cambiar_contraseña, name='cambiar_contraseña'),
 ]
