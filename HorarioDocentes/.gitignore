@@ -12,3 +12,6 @@ env/
 
 # Ignorar archivos de configuración de VSCode
 .vscode/
+
+__pycache__/
+*.pyc
