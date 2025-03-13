@@ -1,0 +1,15 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Eliminar Administrador{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center text-danger">Eliminar Administrador</h2>
+    <p class="text-center">¿Estás seguro de que deseas eliminar al administrador <strong>{{ administrador.user.first_name }} {{ administrador.user.last_name }}</strong>?</p>
+    <form method="post" class="text-center">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a href="{% url 'administrador_list' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

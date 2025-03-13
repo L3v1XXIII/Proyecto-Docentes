@@ -5,7 +5,8 @@ from django.dispatch import receiver
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
-from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm
+from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm
+from django.http import JsonResponse
 
 def login_view(request):
     form = LoginForm(request.POST or None)
@@ -243,46 +244,90 @@ def carrera_delete(request, pk):
         return redirect('carrera_list')
     return render(request, 'carreras/carrera_confirm_delete.html', {'carrera': carrera})
 
-@login_required
+#  LISTAR HORARIOS
 def horario_list(request):
     horarios = Horario.objects.all()
-    return render(request, 'horarios/horario_list.html', {'horarios': horarios})
+    return render(request, 'Horarios/horario_list.html', {'horarios': horarios})
 
-@login_required
+#  CREAR HORARIO
 def horario_create(request):
     if request.method == 'POST':
         form = HorarioForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Horario creado exitosamente.")
             return redirect('horario_list')
     else:
         form = HorarioForm()
-    return render(request, 'horarios/horario_form.html', {'form': form})
+    return render(request, 'Horarios/horario_form.html', {'form': form})
 
-@login_required
+#  ACTUALIZAR HORARIO
 def horario_update(request, pk):
     horario = get_object_or_404(Horario, pk=pk)
     if request.method == 'POST':
         form = HorarioForm(request.POST, instance=horario)
         if form.is_valid():
             form.save()
-            messages.success(request, "Horario actualizado exitosamente.")
             return redirect('horario_list')
     else:
         form = HorarioForm(instance=horario)
-    return render(request, 'horarios/horario_form.html', {'form': form})
+    return render(request, 'Horarios/horario_form.html', {'form': form})
 
-@login_required
+#  ELIMINAR HORARIO
 def horario_delete(request, pk):
     horario = get_object_or_404(Horario, pk=pk)
     if request.method == 'POST':
         horario.delete()
-        messages.success(request, "Horario eliminado exitosamente.")
         return redirect('horario_list')
-    return render(request, 'horarios/horario_confirm_delete.html', {'horario': horario})
+    return render(request, 'Horarios/horario_confirm_delete.html', {'horario': horario})
+
+#  FILTRAR ASIGNATURAS POR CARRERA (AJAX)
+def filter_asignaturas(request):
+    carrera_id = request.GET.get('carrera_id')
+    asignaturas = Asignatura.objects.filter(carrera_id=carrera_id).values('id', 'nombre')
+    return JsonResponse(list(asignaturas), safe=False)
+
 
 @receiver(post_save, sender=User)
 def crear_administrador(sender, instance, created, **kwargs):
     if created and instance.role == 'admin':
         Administrador.objects.create(user=instance)
+        
+# Listar Administradores
+@login_required
+def administrador_list(request):
+    administradores = Administrador.objects.all()
+    return render(request, 'Administradores/administrador_list.html', {'administradores': administradores})
+
+# Crear Administrador
+@login_required
+def administrador_create(request):
+    if request.method == "POST":
+        form = AdministradorForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('administrador_list')
+    else:
+        form = AdministradorForm()
+    return render(request, 'Administradores/administrador_form.html', {'form': form})
+
+# Editar Administrador
+@login_required
+def administrador_update(request, pk):
+    administrador = get_object_or_404(Administrador, pk=pk)
+    if request.method == "POST":
+        form = AdministradorForm(request.POST, instance=administrador)
+        if form.is_valid():
+            form.save()
+            return redirect('administrador_list')
+    else:
+        form = AdministradorForm(instance=administrador)
+    return render(request, 'Administradores/administrador_form.html', {'form': form})
+
+# Eliminar Administrador
+@login_required
+def administrador_delete(request, pk):
+    administrador = get_object_or_404(Administrador, pk=pk)
+    if request.method == "POST":
+        administrador.delete()
+        return redirect('administrador_list')
+    return render(request, 'Administradores/administrador_confirm_delete.html', {'administrador': administrador})

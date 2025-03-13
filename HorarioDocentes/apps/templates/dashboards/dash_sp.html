@@ -7,30 +7,63 @@
 
 {% block content %}
 
-    <!-- Header -->
-    <div class="header bg-primary pb-6">
-      <div class="container-fluid">
+<!-- Header con Mensaje de Bienvenida -->
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
         <div class="header-body">
-          <div class="row align-items-center py-4">
-            <div class="col-lg-6 col-7">
-              
+            <div class="row align-items-center py-4">
+                <div class="col-lg-12 text-center">
+                    <h1 class="text-white">
+                        Bienvenido, <strong>{{ user.first_name|default:"Usuario" }}</strong> 🎉
+                    </h1>
+                    <p class="text-white-50">
+                        Sistema de Gestión de Horario Docente - Administra horarios, asignaturas y más.
+                    </p>
+                </div>
             </div>
-            <div class="col-lg-6 col-5 text-right">
-              
-          </div>
-          <!-- Card stats -->
         </div>
-      </div>
     </div>
+</div>
 
-    <!-- Page content -->
+<!-- Contenido del Dashboard -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-4">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-calendar-alt"></i> Horarios</h5>
+                    <p class="card-text">Gestiona los horarios de los docentes y asignaturas.</p>
+                    <a href="{% url 'horario_list' %}" class="btn btn-primary btn-sm">Ver Horarios</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-book"></i> Asignaturas</h5>
+                    <p class="card-text">Consulta y administra las asignaturas registradas.</p>
+                    <a href="{% url 'asignatura_list' %}" class="btn btn-primary btn-sm">Ver Asignaturas</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-users"></i> Docentes</h5>
+                    <p class="card-text">Administra los docentes y sus horarios asignados.</p>
+                    <a href="{% url 'docente_list' %}" class="btn btn-primary btn-sm">Ver Docentes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock content %}
 
-<!-- Specific JS goes HERE --> 
+<!-- Specific JS goes HERE -->
 {% block javascripts %}
 
-  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
-  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
+<script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+<script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
 
 {% endblock javascripts %}

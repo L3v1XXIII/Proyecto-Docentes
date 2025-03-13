@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from datetime import timedelta, datetime, date
+
 
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
@@ -74,7 +76,6 @@ class Docente(models.Model):
     email = models.EmailField(max_length=254)
     telefono = models.CharField(max_length=15)
     area = models.CharField(max_length=100)
-    administrador = models.ForeignKey(Administrador, on_delete=models.CASCADE)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     matricula = models.CharField(max_length=10)
     CURP = models.CharField(max_length=18)
@@ -97,13 +98,36 @@ class Asignatura(models.Model):
 
 # Modelo de Horarios
 class Horario(models.Model):
-    dia = models.CharField(max_length=20)
+    DIAS_SEMANA = [
+        ('Lunes', 'Lunes'), ('Martes', 'Martes'), ('Miércoles', 'Miércoles'),
+        ('Jueves', 'Jueves'), ('Viernes', 'Viernes'), ('Sábado', 'Sábado')
+    ]
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE)
+    dia = models.CharField(max_length=20, choices=DIAS_SEMANA)
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
     carrera = models.ForeignKey(Carrera, on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        # 🔹 Calcular la duración en horas del nuevo horario
+        duracion_nueva = (datetime.combine(date.today(), self.hora_fin) - datetime.combine(date.today(), self.hora_inicio)).total_seconds() / 3600
+
+        # 🔹 Obtener la suma total de horas ya asignadas a la asignatura
+        total_horas_existente = Horario.objects.filter(asignatura=self.asignatura).aggregate(
+            total_horas=models.Sum(models.F('hora_fin') - models.F('hora_inicio'))
+        )['total_horas']
+
+        # 🔹 Convertir `total_horas_existente` a horas si no es `None`
+        total_horas_existente = total_horas_existente.total_seconds() / 3600 if total_horas_existente else 0
+
+        # 🔹 Validar que la asignatura no tenga más de 3 horas semanales
+        if total_horas_existente + duracion_nueva > 3:
+            raise ValueError("No se pueden asignar más de 3 horas semanales a esta asignatura.")
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"{self.dia} {self.hora_inicio} - {self.hora_fin}"
+        return f"{self.asignatura.nombre} - {self.dia} {self.hora_inicio} - {self.hora_fin}"
 
 # Asignación de Docentes a Horarios y Asignaturas
 class Asignacion(models.Model):

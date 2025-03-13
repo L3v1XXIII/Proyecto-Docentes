@@ -1,0 +1,63 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Lista de Administradores {% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary"><i class="fas fa-user-shield"></i> Administradores</h2>
+        <a href="{% url 'administrador_create' %}" class="btn btn-success">
+            <i class="fas fa-plus-circle"></i> Agregar Administrador
+        </a>
+    </div>
+
+    <!-- Tabla dentro de una Card -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Carreras Asignadas</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for administrador in administradores %}
+                    <tr>
+                        <td>{{ administrador.id }}</td>
+                        <td>{{ administrador.user.first_name }} {{ administrador.user.last_name }}</td>
+                        <td>{{ administrador.user.email }}</td>
+                        <td>
+                            {% for carrera in administrador.carreras.all %}
+                                <span class="badge bg-info">{{ carrera.nombre }}</span>
+                            {% empty %}
+                                <span class="text-muted">Sin carreras asignadas</span>
+                            {% endfor %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'administrador_update' administrador.id %}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{% url 'administrador_delete' administrador.id %}" class="btn btn-sm btn-danger"
+                               onclick="return confirm('¿Estás seguro de eliminar este administrador?')">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No hay administradores registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
