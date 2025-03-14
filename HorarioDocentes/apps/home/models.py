@@ -129,6 +129,18 @@ class Horario(models.Model):
     def __str__(self):
         return f"{self.asignatura.nombre} - {self.dia} {self.hora_inicio} - {self.hora_fin}"
 
+#Recomendacion de horarios
+class HorarioRecomendado(models.Model):
+    docente = models.ForeignKey(Docente, on_delete=models.CASCADE)
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE)
+    horario = models.ForeignKey(Horario, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('docente', 'asignatura', 'horario')
+
+    def __str__(self):
+        return f"Horario recomendado: {self.docente.email} - {self.asignatura.nombre} - {self.horario}"
+
 # Asignación de Docentes a Horarios y Asignaturas
 class Asignacion(models.Model):
     docente = models.ForeignKey(Docente, on_delete=models.CASCADE)

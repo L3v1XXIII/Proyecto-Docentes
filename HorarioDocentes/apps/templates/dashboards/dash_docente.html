@@ -7,30 +7,52 @@
 
 {% block content %}
 
-    <!-- Header -->
-    <div class="header bg-primary pb-6">
-      <div class="container-fluid">
+<!-- Header con Mensaje de Bienvenida -->
+<div class="header bg-primary pb-6">
+    <div class="container-fluid">
         <div class="header-body">
-          <div class="row align-items-center py-4">
-            <div class="col-lg-6 col-7">
-              
+            <div class="row align-items-center py-4">
+                <div class="col-lg-12 text-center">
+                    <h1 class="text-white">
+                        Bienvenido, <strong>{{ user.first_name|default:"Docente" }}</strong> 🎉
+                    </h1>
+                    <p class="text-white-50">
+                        Sistema de Gestión de Horario Docente - Accede a tu horario y materias disponibles.
+                    </p>
+                </div>
             </div>
-            <div class="col-lg-6 col-5 text-right">
-              
-          </div>
-          <!-- Card stats -->
         </div>
-      </div>
     </div>
+</div>
 
-    <!-- Page content -->
+<!-- Contenido del Dashboard -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-calendar-check"></i> Horario de Ciclos</h5>
+                    <p class="card-text">Consulta tu horario de clases asignado para los ciclos académicos.</p>
+                    <a href="#" class="btn btn-primary btn-sm disabled">Próximamente</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 class="card-title text-primary"><i class="fas fa-book-open"></i> Materias Disponibles</h5>
+                    <p class="card-text">Explora las materias disponibles para ser impartidas.</p>
+                    <a href="#" class="btn btn-primary btn-sm disabled">Próximamente</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock content %}
 
-<!-- Specific JS goes HERE --> 
+<!-- Specific JS goes HERE -->
 {% block javascripts %}
-
-  <script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
-  <script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
-
+<script src="/static/assets/vendor/chart.js/dist/Chart.min.js"></script>
+<script src="/static/assets/vendor/chart.js/dist/Chart.extension.js"></script>
 {% endblock javascripts %}

@@ -41,8 +41,7 @@
                             <a href="{% url 'user_update' user.id %}" class="btn btn-sm btn-warning">
                                 <i class="fas fa-edit"></i> Editar
                             </a>
-                            <a href="{% url 'user_delete' user.id %}" class="btn btn-sm btn-danger"
-                               onclick="return confirm('¿Estás seguro de eliminar este usuario?')">
+                            <a href="{% url 'user_delete' user.id %}" class="btn btn-sm btn-danger">
                                 <i class="fas fa-trash-alt"></i> Eliminar
                             </a>
                         </td>
