@@ -1,7 +1,11 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from datetime import timedelta, datetime, date
-
+from django.contrib.auth.hashers import make_password
+from django.core.mail import send_mail
+import random
+import string
+from django.core.exceptions import ValidationError
 
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
@@ -84,6 +88,33 @@ class Docente(models.Model):
     titulo = models.FileField(upload_to='titulos/', null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'docente'})
 
+    def save(self, *args, **kwargs):
+        if not self.user:
+            # Generar una contraseña aleatoria de 10 caracteres
+            password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+
+            # Crear un usuario con el mismo email
+            user = User.objects.create(
+                email=self.email,
+                role='docente',
+                password=make_password(password),  # Encriptar la contraseña
+                is_active=True
+            )
+
+            # Asociar el usuario al docente
+            self.user = user
+
+            # Opcional: Enviar email con la contraseña al usuario
+            send_mail(
+                'Acceso al Sistema de Gestión de Horarios',
+                f'Hola {self.nombre},\n\nTu cuenta ha sido creada.\n\nEmail: {self.email}\nContraseña: {password}\n\nPor favor cambia tu contraseña después de iniciar sesión.',
+                'admin@tusistema.com',  # Cambia esto por el email del sistema
+                [self.email],
+                fail_silently=True,
+            )
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.email
 
@@ -138,8 +169,25 @@ class HorarioRecomendado(models.Model):
     class Meta:
         unique_together = ('docente', 'asignatura', 'horario')
 
+    def save(self, *args, **kwargs):
+        # 🔹 Calcular la duración en horas del nuevo horario
+        duracion_nueva = (datetime.combine(date.today(), self.horario.hora_fin) - datetime.combine(date.today(), self.horario.hora_inicio)).total_seconds() / 3600
+
+        # 🔹 Obtener la suma total de horas ya recomendadas por el docente
+        total_horas_existente = HorarioRecomendado.objects.filter(docente=self.docente).aggregate(
+            total_horas=models.Sum(models.F('horario__hora_fin') - models.F('horario__hora_inicio'))
+        )['total_horas']
+
+        total_horas_existente = total_horas_existente.total_seconds() / 3600 if total_horas_existente else 0
+
+        # 🔹 Validar que el docente no exceda las 18 horas semanales
+        if total_horas_existente + duracion_nueva > 18:
+            raise ValueError("No puedes recomendar más de 18 horas semanales.")
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Horario recomendado: {self.docente.email} - {self.asignatura.nombre} - {self.horario}"
+        return f"Recomendado: {self.docente.email} - {self.asignatura.nombre} - {self.horario}"
 
 # Asignación de Docentes a Horarios y Asignaturas
 class Asignacion(models.Model):
@@ -161,3 +209,35 @@ class ReporteCargaAcademica(models.Model):
 
     def __str__(self):
         return f"{self.docente.email} - {self.total_horas}h en {self.cuatrimestre}"
+
+class AsignacionMateria(models.Model):
+    docente = models.ForeignKey(Docente, on_delete=models.CASCADE)
+    carrera = models.ForeignKey(Carrera, on_delete=models.CASCADE)  # 🔹 Se cambia Asignatura por Carrera
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE)
+    horario = models.ForeignKey(Horario, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('docente', 'asignatura', 'horario')
+
+    def clean(self):
+        """ Valida que el docente no tenga más de 18 horas semanales """
+        total_horas_existente = AsignacionMateria.objects.filter(docente=self.docente).aggregate(
+            total_horas=models.Sum(models.F('horario__hora_fin') - models.F('horario__hora_inicio'))
+        )['total_horas']
+
+        # Convertir `total_horas_existente` a horas si no es None
+        total_horas_existente = total_horas_existente.total_seconds() / 3600 if total_horas_existente else 0
+
+        # 🔹 Calcular duración del nuevo horario
+        duracion_nueva = (self.horario.hora_fin.hour - self.horario.hora_inicio.hour) + \
+                         (self.horario.hora_fin.minute - self.horario.hora_inicio.minute) / 60
+
+        if total_horas_existente + duracion_nueva > 18:
+            raise ValidationError("El docente no puede tener más de 18 horas semanales.")
+
+    def save(self, *args, **kwargs):
+        self.clean()  # Llamar a la validación antes de guardar
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.docente.email} - {self.asignatura.nombre} - {self.horario}"

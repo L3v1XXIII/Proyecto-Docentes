@@ -1,0 +1,54 @@
+{% extends "layouts/base-docente.html" %}
+
+{% block title %} Recomendar Horario {% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-primary">Recomendar Horario</h2>
+    <p>Selecciona la materia y el horario en el que te gustaría impartir clases. Recuerda que no puedes exceder 18 horas semanales.</p>
+
+    {% if messages %}
+        <div class="alert alert-dismissible">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="POST" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+        <button type="submit" class="btn btn-success">Guardar Recomendación</button>
+    </form>
+
+    <hr>
+
+    <h3 class="mt-4">Tus Recomendaciones</h3>
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Asignatura</th>
+                <th>Horario</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for recomendacion in recomendaciones %}
+            <tr>
+                <td>{{ recomendacion.asignatura.nombre }}</td>
+                <td>{{ recomendacion.horario.dia }} - {{ recomendacion.horario.hora_inicio }} - {{ recomendacion.horario.hora_fin }}</td>
+                <td>
+                    <a href="{% url 'eliminar_recomendacion' recomendacion.id %}" class="btn btn-danger btn-sm">Eliminar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">No has recomendado horarios aún.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

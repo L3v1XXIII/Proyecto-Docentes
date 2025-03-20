@@ -1,0 +1,74 @@
+{% extends "layouts/base-admin.html" %}
+
+{% block title %}Asignar Materias a Docentes{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Asignar Materia a Docente</h2>
+
+    <!-- Mensajes de éxito o error -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Formulario de Asignación -->
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <label for="id_docente">Docente:</label>
+            {{ form.docente }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_carrera">Carrera:</label>
+            {{ form.carrera }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_asignatura">Asignatura:</label>
+            {{ form.asignatura }}
+        </div>
+
+        <div class="form-group">
+            <label for="id_horario">Horario:</label>
+            {{ form.horario }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Asignar Materia</button>
+        <a href="{% url 'listar_asignaciones' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+
+<!-- Script para Filtrar Asignaturas según la Carrera Seleccionada -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("id_carrera").addEventListener("change", function () {
+        let carrera_id = this.value;
+        let asignaturaField = document.getElementById("id_asignatura");
+
+        if (carrera_id) {
+            fetch(`/ajax/filtrar-asignaturas/?carrera=${carrera_id}`)
+                .then(response => response.json())
+                .then(data => {
+                    asignaturaField.innerHTML = "";  // Limpiar asignaturas anteriores
+                    data.forEach(asignatura => {
+                        let option = new Option(asignatura.nombre, asignatura.id);
+                        asignaturaField.appendChild(option);
+                    });
+                });
+        } else {
+            asignaturaField.innerHTML = "";  // Si no hay carrera seleccionada, vaciar asignaturas
+        }
+    });
+});
+</script>
+
+{% endblock %}

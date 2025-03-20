@@ -4,9 +4,15 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
-from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm, CambiarContraseñaForm
+from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador, HorarioRecomendado, AsignacionMateria
+from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm, CambiarContraseñaForm, HorarioRecomendadoForm, AsignacionMateriaForm
 from django.http import JsonResponse
+from django.core.mail import send_mail
+from django.contrib.auth.hashers import make_password
+from django.utils.crypto import get_random_string
+import random
+import string
+from django.db import models
 
 def login_view(request):
     form = LoginForm(request.POST or None)
@@ -128,21 +134,44 @@ def docente_create(request):
         form = DocenteForm(request.POST, request.FILES)
         if form.is_valid():
             docente = form.save(commit=False)
-            # Verifica si el usuario ya existe, si no, créalo automáticamente
-            if not docente.user:
-                docente.user = User.objects.create(
-                    email=docente.email,
-                    role="docente"
+
+            # 🔹 Generar una contraseña aleatoria de 10 caracteres
+            password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+
+            # 🔹 Verificar si el usuario ya existe
+            user, created = User.objects.get_or_create(email=docente.email, defaults={
+                'role': 'docente',
+                'password': make_password(password),  # Guardar la contraseña cifrada
+                'is_active': True
+            })
+
+            # 🔹 Asociar el usuario al docente solo si se creó un nuevo usuario
+            if created:
+                # Asociar el usuario creado al docente
+                docente.user = user
+                docente.save()
+
+                # 🔹 Enviar email con la contraseña generada
+                send_mail(
+                    'Acceso al Sistema de Gestión de Horarios',
+                    f'Hola {docente.nombre},\n\n'
+                    f'Tu cuenta ha sido creada en el sistema de gestión de horarios.\n\n'
+                    f'🔹 **Email**: {docente.email}\n'
+                    f'🔹 **Contraseña**: {password}\n\n'
+                    f'⚠️ Te recomendamos cambiar tu contraseña después de iniciar sesión.\n\n'
+                    'Saludos,\nEquipo de Administración',
+                    'admin@tusistema.com',
+                    [docente.email],
+                    fail_silently=False,  # Cambiar a `True` si no quieres que falle la ejecución en caso de error
                 )
-            docente.save()
+
             messages.success(request, "Docente creado exitosamente.")
             return redirect('docente_list')
-        else:
-            print("Errores en el formulario:", form.errors)  # Para depuración
     else:
         form = DocenteForm()
     
-    return render(request, 'docentes/docente_form.html', {"form": form})
+    return render(request, 'Docentes/docente_form.html', {"form": form})
+
 
 @login_required
 def docente_update(request, pk):
@@ -164,7 +193,7 @@ def docente_delete(request, pk):
         docente.delete()
         messages.success(request, "Docente eliminado exitosamente.")
         return redirect('docente_list')
-    return render(request, 'docentes/docente_confirm_delete.html', {'docente': docente})
+    return render(request, 'Docentes/docente_confirm_delete.html', {'docente': docente})
 
 @login_required
 def asignatura_list(request):
@@ -351,3 +380,101 @@ def cambiar_contraseña(request):
         form = CambiarContraseñaForm(user=request.user)
 
     return render(request, 'perfil/cambiar_contraseña.html', {'form': form})
+@login_required
+def recomendar_horario(request):
+    docente = get_object_or_404(Docente, user=request.user)  # Obtener el docente autenticado
+
+    if request.method == "POST":
+        form = HorarioRecomendadoForm(request.POST)
+        if form.is_valid():
+            recomendacion = form.save(commit=False)
+            recomendacion.docente = docente
+            try:
+                recomendacion.save()
+                messages.success(request, "Horario recomendado guardado exitosamente.")
+            except ValueError as e:
+                messages.error(request, str(e))
+
+            return redirect('recomendar_horario')
+    else:
+        form = HorarioRecomendadoForm()
+
+    # Obtener las recomendaciones actuales del docente
+    recomendaciones = HorarioRecomendado.objects.filter(docente=docente)
+
+    return render(request, "recom/recomendar_horario.html", {"form": form, "recomendaciones": recomendaciones})
+
+@login_required
+def eliminar_recomendacion(request, recomendacion_id):
+    recomendacion = get_object_or_404(HorarioRecomendado, id=recomendacion_id, docente=request.user.docente)
+    recomendacion.delete()
+    messages.success(request, "Recomendación eliminada exitosamente.")
+    return redirect('recomendar_horario')
+
+@login_required
+def asignar_materia(request):
+    if request.method == "POST":
+        form = AsignacionMateriaForm(request.POST)
+        if form.is_valid():
+            asignacion = form.save(commit=False)
+
+            # Validar que el docente no tenga más de 18 horas semanales
+            total_horas_existente = AsignacionMateria.objects.filter(docente=asignacion.docente).aggregate(
+                total_horas=models.Sum(models.F('horario__hora_fin') - models.F('horario__hora_inicio'))
+            )['total_horas']
+
+            total_horas_existente = total_horas_existente.total_seconds() / 3600 if total_horas_existente else 0
+            duracion_nueva = (asignacion.horario.hora_fin.hour - asignacion.horario.hora_inicio.hour) + \
+                             (asignacion.horario.hora_fin.minute - asignacion.horario.hora_inicio.minute) / 60
+
+            if total_horas_existente + duracion_nueva > 18:
+                messages.error(request, "El docente no puede tener más de 18 horas semanales.")
+            else:
+                asignacion.save()
+                messages.success(request, "Asignación guardada exitosamente.")
+                return redirect('listar_asignaciones')
+    else:
+        form = AsignacionMateriaForm()
+
+    return render(request, "administracion/asignar_materias.html", {"form": form})
+
+def listar_asignaciones(request):
+    asignaciones = AsignacionMateria.objects.all()
+    return render(request, 'administracion/asignar_horarios_form.html', {'asignaciones': asignaciones})
+
+def asignar_materia(request):
+    if request.method == 'POST':
+        form = AsignacionMateriaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_asignaciones')
+    else:
+        form = AsignacionMateriaForm()
+    return render(request, 'administracion/asignar_horarios_form.html', {'form': form})
+
+@login_required
+def recomendaciones_docentes(request):
+    recomendaciones = HorarioRecomendado.objects.all().select_related('docente', 'asignatura', 'horario')
+    return render(request, 'administracion/recomendaciones_docentes.html', {'recomendaciones': recomendaciones})
+
+@login_required
+def filtrar_asignaturas(request):
+    carrera_id = request.GET.get('carrera')
+    asignaturas = Asignatura.objects.filter(carrera_id=carrera_id).values('id', 'nombre')
+    return JsonResponse(list(asignaturas), safe=False)
+
+def editar_asignacion(request, pk):
+    asignacion = get_object_or_404(AsignacionMateria, pk=pk)
+    if request.method == 'POST':
+        form = AsignacionMateriaForm(request.POST, instance=asignacion)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_asignaciones')
+    else:
+        form = AsignacionMateriaForm(instance=asignacion)
+    return render(request, 'administracion/asignar_horarios_form.html', {'form': form})
+
+def eliminar_asignacion(request, pk):
+    asignacion = get_object_or_404(AsignacionMateria, pk=pk)
+    asignacion.delete()
+    return redirect('listar_asignaciones')

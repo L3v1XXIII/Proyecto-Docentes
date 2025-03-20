@@ -1,0 +1,29 @@
+{% extends "layouts/base-admin.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Asignaciones de Materias a Docentes</h2>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Docente</th>
+                <th>Asignatura</th>
+                <th>Horario</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asignacion in asignaciones %}
+            <tr>
+                <td>{{ asignacion.docente.email }}</td>
+                <td>{{ asignacion.asignatura.nombre }}</td>
+                <td>{{ asignacion.horario }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center">No hay asignaciones registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
