@@ -29,7 +29,7 @@
   --cyan: #2bffc6;
   --white: #fff;
   --gray: #8898aa;
-  --gray-dark: #0d1b2a;
+  --gray-dark: #32325d;
   --light: #ced4da;
   --lighter: #e9ecef;
   --primary: #2563EB;
@@ -323,7 +323,7 @@ h1, h2, h3, h4, h5, h6,
   font-family: inherit;
   font-weight: 600;
   line-height: 1.5;
-  color: #0d1b2a; }
+  color: #32325d; }
 
 h1, .h1 {
   font-size: 1.625rem; }
@@ -4922,7 +4922,7 @@ a.close.disabled {
   padding: 0.5rem 0.95rem;
   margin-bottom: 0;
   font-size: 1rem;
-  color: #0d1b2a;
+  color: #32325d;
   background-color: #fff;
   border-bottom: 1px solid #f2f2f2;
   border-top-left-radius: calc(0.4375rem - 1px);
@@ -10720,7 +10720,7 @@ a.text-darker:hover, a.text-darker:focus {
   font-size: 0.875rem;
   text-transform: none; }
   .badge-dot strong {
-    color: #0d1b2a; }
+    color: #32325d; }
   .badge-dot i {
     display: inline-block;
     vertical-align: middle;
@@ -11052,7 +11052,7 @@ a.btn-icon-only {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.25;
-  color: #0d1b2a;
+  color: #32325d;
   background-color: #f6f9fc;
   border-radius: 0.375rem;
   border: 0;
@@ -12084,7 +12084,7 @@ textarea[resize="horizontal"] {
 
 .list-group-heading {
   font-size: 1rem;
-  color: #0d1b2a; }
+  color: #32325d; }
   .list-group-heading > small {
     float: right;
     color: #adb5bd;
@@ -12330,7 +12330,7 @@ textarea[resize="horizontal"] {
   color: #fff; }
 
 .navbar-horizontal .navbar-light .navbar-brand {
-  color: #0d1b2a; }
+  color: #32325d; }
 
 .navbar-horizontal .navbar-nav .nav-item .media:not(:last-child) {
   margin-bottom: 1.5rem; }
@@ -14098,7 +14098,7 @@ button.bg-gray:focus {
   background-color: #6a7e95 !important; }
 
 .bg-gray-dark {
-  background-color: #0d1b2a !important; }
+  background-color: #32325d !important; }
 
 a.bg-gray-dark:hover, a.bg-gray-dark:focus,
 button.bg-gray-dark:hover,
@@ -14194,7 +14194,7 @@ button.bg-lighter:focus {
   background: linear-gradient(87deg, #8898aa 0, #888aaa 100%) !important; }
 
 .bg-gradient-gray-dark {
-  background: linear-gradient(87deg, #0d1b2a 0, #44325d 100%) !important; }
+  background: linear-gradient(87deg, #32325d 0, #44325d 100%) !important; }
 
 .bg-gradient-light {
   background: linear-gradient(87deg, #ced4da 0, #cecfda 100%) !important; }
@@ -15015,7 +15015,7 @@ a.text-gray:hover, a.text-gray:focus {
   color: #607286 !important; }
 
 .text-gray-dark {
-  color: #0d1b2a !important; }
+  color: #32325d !important; }
 
 a.text-gray-dark:hover, a.text-gray-dark:focus {
   color: #17172b !important; }

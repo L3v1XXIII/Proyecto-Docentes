@@ -69,6 +69,9 @@ def redirect_dashboard(user):
         return redirect('docente_dashboard')
     return redirect('/')  # En caso de algún error
 
+@login_required
+def dashboard(request):
+    return render(request, 'dashboards/dash_central.html')
 
 @login_required
 def superadmin_dashboard(request):

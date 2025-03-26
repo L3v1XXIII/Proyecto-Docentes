@@ -8,7 +8,7 @@
 {% block content %}
 
 <!-- Header con Mensaje de Bienvenida -->
-<div class="header bg-primary pb-6">
+<div class="header" style="background-color: #102c54; padding-bottom: 6rem;">
     <div class="container-fluid">
         <div class="header-body">
             <div class="row align-items-center py-4">
@@ -31,27 +31,27 @@
         <div class="col-lg-4">
             <div class="card shadow border-0">
                 <div class="card-body">
-                    <h5 class="card-title text-primary"><i class="fas fa-calendar-alt"></i> Horarios</h5>
+                    <h5 style="color: #102c54;"><i class="fas fa-calendar-alt" style="color: #102c54;"></i> Horarios</h5>
                     <p class="card-text">Gestiona los horarios de los docentes y asignaturas.</p>
-                    <a href="{% url 'horario_list' %}" class="btn btn-primary btn-sm">Ver Horarios</a>
+                    <a href="{% url 'horario_list' %}" class="btn btn-sm" style="background-color: #102c54; color: white;">Ver Horarios</a>
                 </div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="card shadow border-0">
                 <div class="card-body">
-                    <h5 class="card-title text-primary"><i class="fas fa-book"></i> Asignaturas</h5>
+                    <h5 style="color: #102c54;"><i class="fas fa-book" style="color: #102c54;"></i> Asignaturas</h5>
                     <p class="card-text">Consulta y administra las asignaturas registradas.</p>
-                    <a href="{% url 'asignatura_list' %}" class="btn btn-primary btn-sm">Ver Asignaturas</a>
+                    <a href="{% url 'asignatura_list' %}" class="btn btn-sm" style="background-color: #102c54; color: white;">Ver Asignaturas</a>
                 </div>
             </div>
         </div>
         <div class="col-lg-4">
             <div class="card shadow border-0">
                 <div class="card-body">
-                    <h5 class="card-title text-primary"><i class="fas fa-users"></i> Docentes</h5>
+                    <h5 style="color: #102c54;"><i class="fas fa-users" style="color: #102c54;"></i> Docentes</h5>
                     <p class="card-text">Administra los docentes y sus horarios asignados.</p>
-                    <a href="{% url 'docente_list' %}" class="btn btn-primary btn-sm">Ver Docentes</a>
+                    <a href="{% url 'docente_list' %}" class="btn btn-sm" style="background-color: #102c54; color: white;">Ver Docentes</a>
                 </div>
             </div>
         </div>
