@@ -2,7 +2,7 @@
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
-from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador, HorarioRecomendado, AsignacionMateria
+from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador, Periodo, Grupo, Disponibilidad
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 import random
@@ -128,25 +128,26 @@ class DocenteForm(forms.ModelForm):
         ]
 
     
+# AsignaturaForm
 class AsignaturaForm(forms.ModelForm):
-    codigo = forms.CharField(
-        widget=forms.TextInput(
-            attrs={"placeholder": "Código de la asignatura", "class": "form-control"}
-        )
-    )
-    nombre = forms.CharField(
-        widget=forms.TextInput(
-            attrs={"placeholder": "Nombre de la asignatura", "class": "form-control"}
-        )
-    )
-    carrera = forms.ModelChoiceField(
-        queryset=Carrera.objects.all(),
-        widget=forms.Select(attrs={"class": "form-control"})
-    )
-    
+    nombre = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Nombre de la asignatura", "class": "form-control"}))
+    clave = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Clave", "class": "form-control"}))
+    matricula = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Matrícula", "class": "form-control"}))
+    carrera = forms.ModelChoiceField(queryset=Carrera.objects.all(), required=False, widget=forms.Select(attrs={"class": "form-control"}))
+    periodo = forms.ModelChoiceField(queryset=Periodo.objects.all(), required=False, widget=forms.Select(attrs={"class": "form-control"}))
+
     class Meta:
         model = Asignatura
-        fields = ["codigo", "nombre", "carrera"]
+        fields = ["nombre", "clave", "matricula", "carrera", "periodo"]
+
+# GrupoForm
+class GrupoForm(forms.ModelForm):
+    nombre = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Nombre del grupo", "class": "form-control"}))
+
+    class Meta:
+        model = Grupo
+        fields = ["nombre"]
+
     
 class CarreraForm(forms.ModelForm):
     codigo = forms.CharField(
@@ -164,33 +165,45 @@ class CarreraForm(forms.ModelForm):
         model = Carrera
         fields = ["codigo", "nombre"]
 
+# HorarioForm
 class HorarioForm(forms.ModelForm):
-    carrera = forms.ModelChoiceField(
-        queryset=Carrera.objects.all(),
-        widget=forms.Select(attrs={"class": "form-control", "id": "carrera-select"})
+    dia = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Dia", "class": "form-control"}
+        )
     )
-    
-    asignatura = forms.ModelChoiceField(
-        queryset=Asignatura.objects.none(),  # 🔹 Inicialmente vacío
-        widget=forms.Select(attrs={"class": "form-control", "id": "asignatura-select"})
+    hora = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Hora", "class": "form-control"}
+        )
     )
-
-    dia = forms.ChoiceField(
-        choices=Horario.DIAS_SEMANA,
-        widget=forms.Select(attrs={"class": "form-control"})
+    docente = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Nombre del Docente", "class": "form-control"}
+        )
     )
-    
-    hora_inicio = forms.TimeField(
-        widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"})
+    materia = forms.CharField(
+        widget=forms.TextInput(
+            attrs={"placeholder": "Nombre de la Materia", "class": "form-control"}
+        )
     )
-    
-    hora_fin = forms.TimeField(
-        widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"})
-    )
-    
     class Meta:
         model = Horario
-        fields = ["carrera", "asignatura", "dia", "hora_inicio", "hora_fin"]
+        fields = ["dia", "hora", "docente", "materia"]
+    
+    # DisponibilidadForm
+class DisponibilidadForm(forms.ModelForm):
+    class Meta:
+        model = Disponibilidad
+        fields = ["docente", "materia", "dia", "hora_inicio", "hora_fin"]
+        widgets = {
+            "docente": forms.Select(attrs={"class": "form-control"}),
+            "materia": forms.Select(attrs={"class": "form-control"}),
+            "dia": forms.Select(attrs={"class": "form-control"}),
+            "hora_inicio": forms.Select(attrs={"class": "form-control"}),
+            "hora_fin": forms.Select(attrs={"class": "form-control"}),
+        }
+    
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -205,32 +218,19 @@ class HorarioForm(forms.ModelForm):
         elif self.instance.pk:
             self.fields["asignatura"].queryset = Asignatura.objects.filter(carrera=self.instance.carrera)
     
+# AdministradorForm
 class AdministradorForm(forms.ModelForm):
-    user = forms.ModelChoiceField(
-        queryset=User.objects.filter(role="admin"),  # Filtra solo usuarios con rol de administrador
-        widget=forms.Select(attrs={"class": "form-control"})
-    )
-    carreras = forms.ModelMultipleChoiceField(
-        queryset=Carrera.objects.all(),
-        widget=forms.SelectMultiple(attrs={"class": "form-control"}),
-        required=True,
-        help_text="Selecciona las carreras que administrará este usuario."
-    )
+    nombre = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Nombre", "class": "form-control"}))
+    apellido_paterno = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Apellido Paterno", "class": "form-control"}))
+    apellido_materno = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Apellido Materno", "class": "form-control"}))
+    clave = forms.CharField(required=False, widget=forms.TextInput(attrs={"placeholder": "Clave", "class": "form-control"}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={"placeholder": "Correo Electrónico", "class": "form-control"}))
+    telefono = forms.CharField(widget=forms.TextInput(attrs={"placeholder": "Teléfono", "class": "form-control"}))
+    carrera = forms.ModelChoiceField(queryset=Carrera.objects.all(), required=False, widget=forms.Select(attrs={"class": "form-control"}))
 
     class Meta:
         model = Administrador
-        fields = ["user", "carreras"]
-
-    def clean(self):
-        cleaned_data = super().clean()
-        carreras = cleaned_data.get("carreras")
-        
-        if carreras.exists():
-            for carrera in carreras:
-                if Administrador.objects.filter(carreras=carrera).exclude(user=self.instance.user).exists():
-                    raise forms.ValidationError(f"La carrera {carrera.nombre} ya tiene un administrador asignado.")
-        
-        return cleaned_data
+        fields = ["nombre", "apellido_paterno", "apellido_materno", "clave", "email", "telefono", "carrera"]
 
 class CambiarContraseñaForm(PasswordChangeForm):
     old_password = forms.CharField(
@@ -245,71 +245,3 @@ class CambiarContraseñaForm(PasswordChangeForm):
         label="Confirmar Nueva Contraseña",
         widget=forms.PasswordInput(attrs={"class": "form-control", "placeholder": "Confirmar nueva contraseña"})
     )
-
-class HorarioRecomendadoForm(forms.ModelForm):
-    asignatura = forms.ModelChoiceField(
-        queryset=Asignatura.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    horario = forms.ModelChoiceField(
-        queryset=Horario.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-
-    class Meta:
-        model = HorarioRecomendado
-        fields = ['asignatura', 'horario']
-
-    def clean(self):
-        cleaned_data = super().clean()
-        docente = self.instance.docente  # Obtener el docente que envía el formulario
-        horario = cleaned_data.get("horario")
-
-        if docente and horario:
-            # 🔹 Calcular la duración en horas del nuevo horario
-            duracion_nueva = (datetime.combine(date.today(), horario.hora_fin) - datetime.combine(date.today(), horario.hora_inicio)).total_seconds() / 3600
-
-            # 🔹 Obtener la suma total de horas ya recomendadas
-            total_horas_existente = HorarioRecomendado.objects.filter(docente=docente).aggregate(
-                total_horas=models.Sum(models.F('horario__hora_fin') - models.F('horario__hora_inicio'))
-            )['total_horas']
-
-            total_horas_existente = total_horas_existente.total_seconds() / 3600 if total_horas_existente else 0
-
-            # 🔹 Validar que no se excedan las 18 horas semanales
-            if total_horas_existente + duracion_nueva > 18:
-                raise forms.ValidationError("No puedes recomendar más de 18 horas semanales.")
-
-        return cleaned_data
-
-class AsignacionMateriaForm(forms.ModelForm):
-    carrera = forms.ModelChoiceField(
-        queryset=Carrera.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        required=True
-    )
-    asignatura = forms.ModelChoiceField(
-        queryset=Asignatura.objects.none(),  # 🔹 Se llenará dinámicamente con AJAX
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        required=True
-    )
-    horario = forms.ModelChoiceField(
-        queryset=Horario.objects.all(),
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        required=True
-    )
-
-    class Meta:
-        model = AsignacionMateria
-        fields = ['carrera', 'asignatura', 'horario']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'carrera' in self.data:
-            try:
-                carrera_id = int(self.data.get('carrera'))
-                self.fields['asignatura'].queryset = Asignatura.objects.filter(carrera_id=carrera_id)
-            except (ValueError, TypeError):
-                pass  # Manejo de error en caso de datos inválidos
-        elif self.instance.pk:
-            self.fields['asignatura'].queryset = self.instance.carrera.asignatura_set.all()

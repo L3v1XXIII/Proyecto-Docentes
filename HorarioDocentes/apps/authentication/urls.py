@@ -4,8 +4,8 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from django.urls import path
-from .views import filter_asignaturas, asignatura_create, asignatura_delete, asignatura_list, asignatura_update, carrera_create, carrera_delete, carrera_list, carrera_update, horario_create, horario_delete, horario_list, horario_update, administrador_create, administrador_delete, administrador_list, administrador_update, filtrar_asignaturas, editar_asignacion, eliminar_asignacion
-from .views import login_view, register_view, logout_view, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, perfil_usuario, cambiar_contraseña, recomendar_horario, eliminar_recomendacion, listar_asignaciones, recomendaciones_docentes, asignar_materia
+from .views import asignatura_create, asignatura_delete, asignatura_list, asignatura_update, carrera_create, carrera_delete, carrera_list, carrera_update, horario_create, horario_delete, horario_list, horario_update, administrador_create, administrador_delete, administrador_list, administrador_update
+from .views import login_view, register_view, logout_view, dashboard, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, perfil_usuario, cambiar_contraseña
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -16,6 +16,7 @@ urlpatterns = [
     path("dashboard/superadmin/", superadmin_dashboard, name="superadmin_dashboard"),
     path("dashboard/admin/", admin_dashboard, name="admin_dashboard"),
     path("dashboard/docente/", docente_dashboard, name="docente_dashboard"),
+    path("dashboard/", dashboard, name="dashboard"),
     
     path("users/", user_list, name="user_list"), 
     path("users/create/", user_create, name="user_create"), 
@@ -41,7 +42,6 @@ urlpatterns = [
     path('horarios/create/', horario_create, name='horario_create'),
     path('horarios/update/<int:pk>/', horario_update, name='horario_update'),
     path('horarios/delete/<int:pk>/', horario_delete, name='horario_delete'),
-    path('horarios/filter_asignaturas/', filter_asignaturas, name='filter_asignaturas'),
     
     path('administradores/', administrador_list, name='administrador_list'),
     path('administradores/create/', administrador_create, name='administrador_create'),
@@ -51,13 +51,4 @@ urlpatterns = [
     path('perfil/', perfil_usuario, name='perfil_usuario'),
     path('perfil/cambiar-contraseña/', cambiar_contraseña, name='cambiar_contraseña'),
     
-    path('recomendar-horario/', recomendar_horario, name="recomendar_horario"),
-    path('eliminar-recomendacion/<int:recomendacion_id>/', eliminar_recomendacion, name="eliminar_recomendacion"),
-    
-    path('asignaciones/', listar_asignaciones, name='listar_asignaciones'),
-    path('asignaciones/crear/', asignar_materia, name='asignar_materia'),
-    path('asignaciones/editar/<int:pk>/', editar_asignacion, name='editar_asignacion'),
-    path('asignaciones/eliminar/<int:pk>/', eliminar_asignacion, name='eliminar_asignacion'),
-    path('recomendaciones/', recomendaciones_docentes, name='recomendaciones_docentes'),
-    path("ajax/filtrar-asignaturas/", filtrar_asignaturas, name="filtrar_asignaturas"),
 ]

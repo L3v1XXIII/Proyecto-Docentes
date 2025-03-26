@@ -1,0 +1,64 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Dashboard {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<!-- Header con Mensaje de Bienvenida -->
+<div class="header" style="background-color: #102c54; padding-bottom: 6rem;">
+    <div class="container-fluid">
+        <div class="header-body">
+            <div class="row align-items-center py-4">
+                <div class="col-lg-12 text-center">
+                    <h1 class="text-white">
+                        Bienvenido, <strong>{{ user.first_name|default:"Usuario" }}</strong> 🎉
+                    </h1>
+                    <p class="text-white-50">
+                        Sistema de Gestión de Horario Docente - Administra usuarios, coordinadores y reportes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido del Dashboard -->
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Usuarios -->
+        <div class="col-lg-4">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 style="color: #102c54;"><i class="fas fa-user" style="color: #102c54;"></i> Usuarios</h5>
+                    <p class="card-text">Gestiona y administra los usuarios del sistema.</p>
+                    <a href="{% url 'user_list' %}" class="btn btn-sm" style="background-color: #102c54; color: white;">Ver Usuarios</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coordinadores -->
+        <div class="col-lg-4">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 style="color: #102c54;"><i class="fas fa-user-tie" style="color: #102c54;"></i> Coordinadores</h5>
+                    <p class="card-text">Consulta y administra los coordinadores de carreras.</p>
+                    <a href="{% url 'administrador_list' %}" class="btn btn-sm" style="background-color: #102c54; color: white;">Ver Coordinadores</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reportes -->
+        <div class="col-lg-4">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h5 style="color: #102c54;"><i class="fas fa-chart-line" style="color: #102c54;"></i> Reportes</h5>
+                    <p class="card-text">Genera y consulta reportes de carga académica y gestión.</p>
+                    <a href="#" class="btn btn-sm" style="background-color: #102c54; color: white;">Próximamente</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
