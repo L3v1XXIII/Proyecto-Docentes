@@ -5,7 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 
 from django.urls import path
 from .views import asignatura_create, asignatura_delete, asignatura_list, asignatura_update, carrera_create, carrera_delete, carrera_list, carrera_update, horario_create, horario_delete, horario_list, horario_update, administrador_create, administrador_delete, administrador_list, administrador_update, grupo_create, grupo_delete, grupo_list, grupo_update, disponibilidad_create, disponibilidad_delete, disponibilidad_list, disponibilidad_update
-from .views import login_view, register_view, logout_view, dashboard, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, perfil_usuario, cambiar_contraseña, admin_created_success, periodo_create, periodo_delete, periodo_list, periodo_update
+from .views import login_view, register_view, logout_view, dashboard, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, perfil_usuario, cambiar_contraseña, admin_created_success, periodo_create, periodo_delete, periodo_list, periodo_update, mi_horario_view
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -66,4 +66,7 @@ urlpatterns = [
     path('disponibilidades/create/', disponibilidad_create, name='disponibilidad_create'),
     path('disponibilidades/<int:pk>/update/', disponibilidad_update, name='disponibilidad_update'),
     path('disponibilidades/<int:pk>/delete/', disponibilidad_delete, name='disponibilidad_delete'),
+    
+    path('MiHorario/', mi_horario_view, name='mi_horario'),
+
 ]

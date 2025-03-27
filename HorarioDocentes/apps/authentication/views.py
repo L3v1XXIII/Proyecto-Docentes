@@ -12,6 +12,8 @@ from django.contrib.auth.hashers import make_password
 from django.utils.crypto import get_random_string
 import random
 import string
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse
@@ -643,3 +645,26 @@ def disponibilidad_delete(request, pk):
         messages.success(request, 'Disponibilidad eliminada.')
         return redirect('disponibilidad_list')
     return render(request, 'disponibilidad/disponibilidad_confirm_delete.html', {'disponibilidad': disponibilidad})
+
+
+@login_required
+def mi_horario_view(request):
+    docente = get_object_or_404(Docente, user=request.user)
+    horarios = Horario.objects.filter(docente=docente).select_related('materia')
+
+    eventos = []
+    dias_dict = {'Lunes': 1, 'Martes': 2, 'Miércoles': 3, 'Jueves': 4, 'Viernes': 5, 'Sábado': 6}
+    
+    for h in horarios:
+        hora_inicio, hora_fin = h.hora.split(" - ")
+        eventos.append({
+            'title': f'{h.materia.nombre}',
+            'daysOfWeek': [dias_dict[h.dia]],
+            'startTime': hora_inicio,
+            'endTime': hora_fin,
+        })
+
+    return render(request, 'Docentes/mi_horario.html', {
+        'eventos': eventos,
+        'docente': docente,
+    })
