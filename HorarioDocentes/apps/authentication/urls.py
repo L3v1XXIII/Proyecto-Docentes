@@ -68,5 +68,6 @@ urlpatterns = [
     path('disponibilidades/<int:pk>/delete/', disponibilidad_delete, name='disponibilidad_delete'),
     
     path('MiHorario/', mi_horario_view, name='mi_horario'),
+    
 
 ]
