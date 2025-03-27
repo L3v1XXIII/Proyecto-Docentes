@@ -329,11 +329,22 @@ def horario_list(request):
 @login_required
 def horario_create(request):
     form = HorarioForm(request.POST or None)
-    if form.is_valid():
-        form.save()
-        messages.success(request, "Horario creado correctamente.")
-        return redirect('horario_list')
-    return render(request, 'horarios/horario_form.html', {'form': form})
+    disponibilidades = None
+
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Horario asignado correctamente.")
+            return redirect('horario_list')
+    else:
+        docente_id = request.GET.get('docente') or form.initial.get("docente") or None
+        if docente_id:
+            disponibilidades = Disponibilidad.objects.filter(docente_id=docente_id)
+
+    return render(request, 'horarios/horario_form.html', {
+        'form': form,
+        'disponibilidades': disponibilidades
+    })
 
 @login_required
 def horario_update(request, pk):

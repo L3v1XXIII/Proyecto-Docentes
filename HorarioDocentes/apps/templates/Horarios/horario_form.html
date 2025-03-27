@@ -3,7 +3,7 @@
 {% block content %}
 <div class="d-flex justify-content-center align-items-center vh-100 bg-light">
     <div class="card shadow p-4" style="max-width: 720px; border-radius: 10px; width: 100%;">
-        <h4 class="text-center mb-4 text-primary">
+        <h4 class="text-center mb-4" style="color: #102c54;">
             {% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Horario
         </h4>
         <form method="POST">
@@ -20,10 +20,29 @@
                 {% endfor %}
             </div>
             <div class="d-flex justify-content-between mt-4">
-                <button type="submit" class="btn btn-primary w-50 me-2">Guardar</button>
+                <button type="submit" class="btn btn-primary w-50" style="background-color: #102c54;; color: white;">Guardar</button>
                 <a href="{% url 'horario_list' %}" class="btn btn-secondary w-50">Cancelar</a>
             </div>
         </form>
+
+        {% if disponibilidades %}
+        <hr>
+        <div class="mt-4">
+            <h5 class="text-primary text-center">Disponibilidad del Docente</h5>
+            <ul class="list-group">
+                {% for d in disponibilidades %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span><strong>{{ d.dia }}</strong>: {{ d.hora_inicio }} - {{ d.hora_fin }}</span>
+                    {% if d.materia %}
+                        <span class="badge bg-info">{{ d.materia.nombre }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Disponible</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
