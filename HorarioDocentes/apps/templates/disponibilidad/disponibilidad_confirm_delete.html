@@ -1,0 +1,23 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Eliminar Disponibilidad{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div class="card shadow p-4" style="max-width: 500px; width: 100%;">
+        <h4 class="text-center mb-4 text-danger"><i class="fas fa-trash-alt"></i> Confirmar Eliminación</h4>
+        <p class="text-center">
+            ¿Estás seguro de que deseas eliminar la disponibilidad del <strong>{{ disponibilidad.dia }}</strong>
+            de <strong>{{ disponibilidad.hora_inicio }}</strong> a <strong>{{ disponibilidad.hora_fin }}</strong>?
+        </p>
+
+        <form method="POST" class="text-center mt-4">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between">
+                <button type="submit" class="btn btn-danger w-50 me-2">Eliminar</button>
+                <a href="{% url 'disponibilidad_list' %}" class="btn btn-secondary w-50">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

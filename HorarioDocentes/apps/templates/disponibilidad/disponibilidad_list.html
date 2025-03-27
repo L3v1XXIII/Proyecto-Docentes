@@ -1,4 +1,4 @@
-{% extends 'layouts/base.html' %}
+{% extends 'layouts/base-docente.html' %}
 
 {% block title %}Horarios Asignados{% endblock %}
 
@@ -9,13 +9,14 @@
 
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: #102c54;"><i class="fas fa-calendar-alt"></i> Horarios Asignados</h2>
-    <a href="{% url 'horario_create' %}" class="btn btn-success">
-      <i class="fas fa-plus-circle"></i> Asignar Horario
+    <h2 style="color: #102c54;"><i class="fas fa-calendar-alt"></i> Mi Disponibilidad</h2>
+    <a href="{% url 'disponibilidad_create' %}" class="btn btn-success">
+      <i class="fas fa-plus-circle"></i> Agregar Disponibilidad
     </a>
   </div>
 
   <div id='calendar'></div>
+  
 </div>
 
 <script>
@@ -26,7 +27,7 @@
       firstDay: 1,
       hiddenDays: [0],
       slotMinTime: '07:00:00',
-      slotMaxTime: '21:00:00',
+      slotMaxTime: '22:00:00',
       allDaySlot: false,
       headerToolbar: {
         left: '',

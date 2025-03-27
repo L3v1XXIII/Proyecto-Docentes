@@ -1,0 +1,14 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Eliminar Grupo{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-warning">
+        ¿Estás seguro de que deseas eliminar el grupo <strong>{{ grupo.nombre }}</strong>?
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a href="{% url 'grupo_list' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

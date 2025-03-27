@@ -12,7 +12,15 @@
             <i class="fas fa-user-plus"></i> Agregar Usuario
         </a>
     </div>
-
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre, apellido o email" value="{{ query|default:'' }}">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+        </div>
+    </form>
+    
     <!-- Tabla dentro de una Card -->
     <div class="card shadow-sm">
         <div class="card-body">
@@ -38,7 +46,7 @@
                             {% endif %}
                         </td>
                         <td class="text-center">
-                            <a href="{% url 'user_update' user.id %}" class="btn btn-sm btn-warning">
+                            <a href="{% url 'user_update' user.id %}" class="btn btn-sm" style="background-color: #3daee9; color: white;">
                                 <i class="fas fa-edit"></i> Editar
                             </a>
                             <a href="{% url 'user_delete' user.id %}" class="btn btn-sm btn-danger">

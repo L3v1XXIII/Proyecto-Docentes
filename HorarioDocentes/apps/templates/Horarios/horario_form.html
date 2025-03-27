@@ -1,29 +1,29 @@
-{% extends "layouts/base-admin.html" %}
+{% extends 'layouts/base-admin.html' %}
+{% block title %}Formulario de Horario{% endblock %}
 {% block content %}
-<h2>{% if form.instance.pk %}Editar{% else %}Nuevo{% endif %} Horario</h2>
-
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn btn-success">Guardar</button>
-</form>
-
-<script>
-    document.getElementById('carrera-select').addEventListener('change', function() {
-        var carreraId = this.value;
-        fetch(`/horarios/filter_asignaturas/?carrera_id=${carreraId}`)
-        .then(response => response.json())
-        .then(data => {
-            var asignaturaSelect = document.getElementById('asignatura-select');
-            asignaturaSelect.innerHTML = '<option value="">---------</option>';
-            data.forEach(asignatura => {
-                var option = document.createElement('option');
-                option.value = asignatura.id;
-                option.textContent = asignatura.nombre;
-                asignaturaSelect.appendChild(option);
-            });
-        });
-    });
-</script>
-
+<div class="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div class="card shadow p-4" style="max-width: 720px; border-radius: 10px; width: 100%;">
+        <h4 class="text-center mb-4 text-primary">
+            {% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Horario
+        </h4>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row g-2">
+                {% for field in form %}
+                <div class="col-md-6">
+                    <label class="form-label small">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" class="btn btn-primary w-50 me-2">Guardar</button>
+                <a href="{% url 'horario_list' %}" class="btn btn-secondary w-50">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends 'layouts/base-admin.html' %}
+{% extends "layouts/base-admin.html" %}
 
 {% block title %}Eliminar Asignatura{% endblock %}
 
@@ -6,15 +6,15 @@
 <div class="container mt-5 d-flex justify-content-center">
     <div class="card shadow-lg border-0" style="max-width: 500px;">
         <div class="card-body text-center">
-            <h2 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Eliminar Materia</h2>
+            <h2 class="text-danger"><i class="fas fa-exclamation-triangle"></i> Eliminar Asignatura</h2>
             <p class="mt-3 text-muted">
-                ¿Estás seguro de que deseas eliminar a la materia <strong>{{ asignatura.nombre }}</strong>?
+                ¿Estás seguro de que deseas eliminar la asignatura <strong>{{ asignatura.nombre }}</strong>?
                 Esta acción no se puede deshacer.
             </p>
             <form method="POST" class="mt-4">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-danger btn-lg w-100 mb-2">
-                    <i class="fas fa-trash-alt"></i> Eliminar materia
+                    <i class="fas fa-trash-alt"></i> Eliminar Asignatura
                 </button>
                 <a href="{% url 'asignatura_list' %}" class="btn btn-secondary w-100">
                     <i class="fas fa-times"></i> Cancelar
@@ -23,4 +23,4 @@
         </div>
     </div>
 </div>
-{% endblock content %}
+{% endblock %}

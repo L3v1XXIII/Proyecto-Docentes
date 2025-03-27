@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'HorarioDocentes.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hd',  # Reemplaza con el nombre de tu base de datos
+        'NAME': 'hdn',  # Reemplaza con el nombre de tu base de datos
         'USER': 'root',  # El usuario predeterminado de MySQL en XAMPP es 'root'
         'PASSWORD': '',  # La contraseña predeterminada de MySQL en XAMPP es vacía (puedes cambiarla en phpMyAdmin)
         'HOST': '127.0.0.1',  # O 'localhost'

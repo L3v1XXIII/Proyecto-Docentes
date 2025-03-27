@@ -88,13 +88,13 @@ class Administrador(models.Model):
                 is_active=True
             )
 
-            # Asociar el usuario al administrador
+            # Asociar el usuario al docente
             self.user = user
 
             # Opcional: Enviar email con la contraseña al usuario
             send_mail(
                 'Acceso al Sistema de Gestión de Horarios',
-                f'Hola {self.nombre},\n\nTu cuenta con credenciales de administrador ha sido creada.\n\nEmail: {self.email}\nContraseña: {password}\n\nPor favor cambia tu contraseña después de iniciar sesión.',
+                f'Hola {self.nombre},\n\nTu cuenta ha sido creada.\n\nEmail: {self.email}\nContraseña: {password}\n\nPor favor cambia tu contraseña después de iniciar sesión.',
                 'admin@tusistema.com',  # Cambia esto por el email del sistema
                 [self.email],
                 fail_silently=True,
@@ -103,7 +103,7 @@ class Administrador(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.nombre} {self.apellido_paterno} {self.apellido_materno}"
+        return self.email
 
 # Modelo para Periodo
 class Periodo(models.Model):

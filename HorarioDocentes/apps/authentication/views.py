@@ -4,8 +4,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador
-from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm, CambiarContraseñaForm
+from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador, Grupo, Periodo, Disponibilidad
+from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm, CambiarContraseñaForm, GrupoForm, PeriodoForm, DisponibilidadForm
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password
@@ -13,6 +13,8 @@ from django.utils.crypto import get_random_string
 import random
 import string
 from django.db import models
+from django.db.models import Q
+from django.urls import reverse
 
 def login_view(request):
     form = LoginForm(request.POST or None)
@@ -89,8 +91,15 @@ def docente_dashboard(request):
 
 @login_required
 def user_list(request):
-    users = User.objects.all()
-    return render(request, 'users/user_list.html', {'users': users})
+    query = request.GET.get('q', '')
+    users = User.objects.filter(
+        Q(first_name__icontains=query) |
+        Q(last_name__icontains=query) |
+        Q(email__icontains=query) |
+        Q(role__icontains=query)
+    ) if query else User.objects.all()
+
+    return render(request, 'users/user_list.html', {'users': users, 'query': query})
 
 @login_required
 def user_create(request):
@@ -200,47 +209,60 @@ def docente_delete(request, pk):
 
 @login_required
 def asignatura_list(request):
+    query = request.GET.get("q")
     asignaturas = Asignatura.objects.all()
-    return render(request, 'asignaturas/asignatura_list.html', {'asignaturas': asignaturas})
+    if query:
+        asignaturas = asignaturas.filter(
+            Q(nombre__icontains=query) |
+            Q(clave__icontains=query) |
+            Q(matricula__icontains=query)
+        )
+    return render(request, "asignaturas/asignatura_list.html", {"asignaturas": asignaturas, "query": query})
 
 @login_required
 def asignatura_create(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AsignaturaForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Asignatura creada exitosamente.")
-            return redirect('asignatura_list')
+            return redirect("asignatura_list")
     else:
         form = AsignaturaForm()
-    return render(request, 'asignaturas/asignatura_form.html', {'form': form})
+    return render(request, "asignaturas/asignatura_form.html", {"form": form})
 
 @login_required
 def asignatura_update(request, pk):
     asignatura = get_object_or_404(Asignatura, pk=pk)
-    if request.method == 'POST':
+    if request.method == "POST":
         form = AsignaturaForm(request.POST, instance=asignatura)
         if form.is_valid():
             form.save()
-            messages.success(request, "Asignatura actualizada exitosamente.")
-            return redirect('asignatura_list')
+            return redirect("asignatura_list")
     else:
         form = AsignaturaForm(instance=asignatura)
-    return render(request, 'asignaturas/asignatura_form.html', {'form': form})
+    return render(request, "asignaturas/asignatura_form.html", {"form": form})
 
 @login_required
 def asignatura_delete(request, pk):
     asignatura = get_object_or_404(Asignatura, pk=pk)
-    if request.method == 'POST':
+    if request.method == "POST":
         asignatura.delete()
-        messages.success(request, "Asignatura eliminada exitosamente.")
-        return redirect('asignatura_list')
-    return render(request, 'asignaturas/asignatura_confirm_delete.html', {'asignatura': asignatura})
+        return redirect("asignatura_list")
+    return render(request, "asignaturas/asignatura_confirm_delete.html", {"asignatura": asignatura})
+
 
 @login_required
 def carrera_list(request):
-    carreras = Carrera.objects.all()
-    return render(request, 'carreras/carrera_list.html', {'carreras': carreras})
+    query = request.GET.get('q', '')
+    carreras = Carrera.objects.filter(
+        Q(nombre__icontains=query) |
+        Q(clave__icontains=query)
+    ) if query else Carrera.objects.all()
+
+    return render(request, 'carreras/carrera_list.html', {
+        'carreras': carreras,
+        'query': query
+    })
 
 @login_required
 def carrera_create(request):
@@ -276,66 +298,143 @@ def carrera_delete(request, pk):
         return redirect('carrera_list')
     return render(request, 'carreras/carrera_confirm_delete.html', {'carrera': carrera})
 
-#  LISTAR HORARIOS
+@login_required
 def horario_list(request):
-    horarios = Horario.objects.all()
-    return render(request, 'Horarios/horario_list.html', {'horarios': horarios})
+    horarios = Horario.objects.select_related('materia', 'docente')
 
-#  CREAR HORARIO
+    dias_dict = {
+        'Lunes': 1,
+        'Martes': 2,
+        'Miércoles': 3,
+        'Jueves': 4,
+        'Viernes': 5,
+        'Sábado': 6,
+    }
+
+    eventos = []
+    for h in horarios:
+        inicio, fin = h.hora.split(' - ')
+        eventos.append({
+            'title': f"{h.materia.nombre} - {h.docente.nombre}",
+            'startTime': inicio,
+            'endTime': fin,
+            'daysOfWeek': [dias_dict[h.dia]],
+            'url_edit': reverse('horario_update', args=[h.id]),
+            'url_delete': reverse('horario_delete', args=[h.id]),
+        })
+
+    return render(request, 'horarios/horario_list.html', {'eventos': eventos})
+
+
+@login_required
 def horario_create(request):
-    if request.method == 'POST':
-        form = HorarioForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('horario_list')
-    else:
-        form = HorarioForm()
-    return render(request, 'Horarios/horario_form.html', {'form': form})
+    form = HorarioForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Horario creado correctamente.")
+        return redirect('horario_list')
+    return render(request, 'horarios/horario_form.html', {'form': form})
 
-#  ACTUALIZAR HORARIO
+@login_required
 def horario_update(request, pk):
     horario = get_object_or_404(Horario, pk=pk)
-    if request.method == 'POST':
-        form = HorarioForm(request.POST, instance=horario)
-        if form.is_valid():
-            form.save()
-            return redirect('horario_list')
-    else:
-        form = HorarioForm(instance=horario)
-    return render(request, 'Horarios/horario_form.html', {'form': form})
+    form = HorarioForm(request.POST or None, instance=horario)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Horario actualizado.")
+        return redirect('horario_list')
+    return render(request, 'horarios/horario_form.html', {'form': form})
 
-#  ELIMINAR HORARIO
+@login_required
 def horario_delete(request, pk):
     horario = get_object_or_404(Horario, pk=pk)
     if request.method == 'POST':
         horario.delete()
+        messages.success(request, "Horario eliminado.")
         return redirect('horario_list')
-    return render(request, 'Horarios/horario_confirm_delete.html', {'horario': horario})
+    return render(request, 'horarios/horario_confirm_delete.html', {'horario': horario})
 
-
-
-@receiver(post_save, sender=User)
-def crear_administrador(sender, instance, created, **kwargs):
-    if created and instance.role == 'admin':
-        Administrador.objects.create(user=instance)
         
 # Listar Administradores
 @login_required
 def administrador_list(request):
+    query = request.GET.get('q')  # 👈 Obtener el término de búsqueda
     administradores = Administrador.objects.all()
-    return render(request, 'Administradores/administrador_list.html', {'administradores': administradores})
 
+    if query:
+        administradores = administradores.filter(
+            Q(nombre__icontains=query) |
+            Q(apellido_paterno__icontains=query) |
+            Q(apellido_materno__icontains=query) |
+            Q(email__icontains=query)
+        )
+
+    return render(request, 'Administradores/administrador_list.html', {
+        'administradores': administradores,
+        'query': query,
+    })
 # Crear Administrador
 @login_required
 def administrador_create(request):
-    if request.method == "POST":
+    if request.method == 'POST':
         form = AdministradorForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('administrador_list')
+            administrador = form.save(commit=False)
+
+            # Generar contraseña
+            password = get_random_string(length=10)
+            email = administrador.email
+
+            # Validar que no exista el user
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Ya existe un usuario con ese correo.')
+                return render(request, 'Administradores/administrador_form.html', {'form': form, 'accion': 'Crear'})
+
+            # Crear usuario
+            user = User.objects.create(
+                email=email,
+                role='admin',
+                password=make_password(password),
+                is_active=True
+            )
+
+            administrador.user = user
+            administrador.save()
+
+            # Guardar email y password en sesión
+            request.session['admin_email'] = email
+            request.session['admin_password'] = password
+
+            # Enviar correo
+            send_mail(
+                'Acceso al Sistema de Gestión de Horarios',
+                f'Hola {administrador.nombre},\n\nTu cuenta ha sido creada.\nCorreo: {email}\nContraseña: {password}',
+                'admin@tusistema.com',
+                [email],
+                fail_silently=False,
+            )
+
+            return redirect('admin_created_success')
+        else:
+            messages.error(request, 'Corrige los errores del formulario.')
     else:
         form = AdministradorForm()
-    return render(request, 'Administradores/administrador_form.html', {'form': form})
+
+    return render(request, 'Administradores/administrador_form.html', {'form': form, 'accion': 'Crear'})
+
+@login_required
+def admin_created_success(request):
+    email = request.session.pop('admin_email', None)
+    password = request.session.pop('admin_password', None)
+
+    if not email or not password:
+        messages.warning(request, "No hay información del nuevo administrador.")
+        return redirect('administrador_list')
+
+    return render(request, 'Administradores/admin_created_success.html', {
+        'email': email,
+        'password': password
+    })
 
 # Editar Administrador
 @login_required
@@ -378,3 +477,158 @@ def cambiar_contraseña(request):
         form = CambiarContraseñaForm(user=request.user)
 
     return render(request, 'perfil/cambiar_contraseña.html', {'form': form})
+
+@login_required
+def grupo_list(request):
+    query = request.GET.get('q', '')
+    grupos = Grupo.objects.filter(nombre__icontains=query) if query else Grupo.objects.all()
+    return render(request, 'grupos/grupo_list.html', {'grupos': grupos, 'query': query})
+
+@login_required
+def grupo_create(request):
+    if request.method == 'POST':
+        form = GrupoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Grupo creado correctamente.')
+            return redirect('grupo_list')
+    else:
+        form = GrupoForm()
+    return render(request, 'grupos/grupo_form.html', {'form': form, 'accion': 'Crear'})
+
+@login_required
+def grupo_update(request, pk):
+    grupo = get_object_or_404(Grupo, pk=pk)
+    if request.method == 'POST':
+        form = GrupoForm(request.POST, instance=grupo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Grupo actualizado correctamente.')
+            return redirect('grupo_list')
+    else:
+        form = GrupoForm(instance=grupo)
+    return render(request, 'grupos/grupo_form.html', {'form': form, 'accion': 'Editar'})
+
+@login_required
+def grupo_delete(request, pk):
+    grupo = get_object_or_404(Grupo, pk=pk)
+    if request.method == 'POST':
+        grupo.delete()
+        messages.success(request, 'Grupo eliminado correctamente.')
+        return redirect('grupo_list')
+    return render(request, 'grupos/grupo_confirm_delete.html', {'grupo': grupo})
+
+@login_required
+def periodo_list(request):
+    query = request.GET.get("q")
+    if query:
+        periodos = Periodo.objects.filter(nombre__icontains=query)
+    else:
+        periodos = Periodo.objects.all()
+    return render(request, 'periodos/periodo_list.html', {'periodos': periodos, 'query': query})
+
+@login_required
+def periodo_create(request):
+    if request.method == 'POST':
+        form = PeriodoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Periodo creado exitosamente.')
+            return redirect('periodo_list')
+    else:
+        form = PeriodoForm()
+    return render(request, 'periodos/periodo_form.html', {'form': form})
+
+@login_required
+def periodo_update(request, pk):
+    periodo = get_object_or_404(Periodo, pk=pk)
+    if request.method == 'POST':
+        form = PeriodoForm(request.POST, instance=periodo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Periodo actualizado exitosamente.')
+            return redirect('periodo_list')
+    else:
+        form = PeriodoForm(instance=periodo)
+    return render(request, 'periodos/periodo_form.html', {'form': form})
+
+@login_required
+def periodo_delete(request, pk):
+    periodo = get_object_or_404(Periodo, pk=pk)
+    if request.method == 'POST':
+        periodo.delete()
+        messages.success(request, 'Periodo eliminado exitosamente.')
+        return redirect('periodo_list')
+    return render(request, 'periodos/periodo_confirm_delete.html', {'periodo': periodo})
+
+@login_required
+def disponibilidad_list(request):
+    docente = get_object_or_404(Docente, user=request.user)
+    disponibilidades = Disponibilidad.objects.filter(docente=docente)
+    materias = Asignatura.objects.all()
+
+    dias_dict = {
+        'Domingo': 0,
+        'Lunes': 1,
+        'Martes': 2,
+        'Miércoles': 3,
+        'Jueves': 4,
+        'Viernes': 5,
+        'Sábado': 6,
+    }
+
+    eventos = []
+    for d in disponibilidades:
+        eventos.append({
+            "title": d.materia.nombre if d.materia else "Disponible",
+            "daysOfWeek": [dias_dict[d.dia]],
+            "startTime": d.hora_inicio,
+            "endTime": d.hora_fin,
+            "url_edit": reverse("disponibilidad_update", args=[d.id]),
+            "url_delete": reverse("disponibilidad_delete", args=[d.id]),
+        })
+
+    return render(request, 'disponibilidad/disponibilidad_list.html', {
+        'disponibilidades': disponibilidades,
+        'materias': materias,
+        'eventos': eventos,  # <<<< necesario para el calendario
+    })
+
+@login_required
+def disponibilidad_create(request):
+    docente = get_object_or_404(Docente, user=request.user)
+    if request.method == 'POST':
+        form = DisponibilidadForm(request.POST, docente=docente)
+        if form.is_valid():
+            disponibilidad = form.save(commit=False)
+            disponibilidad.docente = docente
+            disponibilidad.save()
+            messages.success(request, "Disponibilidad registrada.")
+            return redirect('disponibilidad_list')
+    else:
+        form = DisponibilidadForm(docente=docente)
+    
+    return render(request, 'disponibilidad/disponibilidad_form.html', {'form': form})
+
+
+@login_required
+def disponibilidad_update(request, pk):
+    disponibilidad = get_object_or_404(Disponibilidad, pk=pk)
+    if request.method == 'POST':
+        form = DisponibilidadForm(request.POST, instance=disponibilidad)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Disponibilidad actualizada.')
+            return redirect('disponibilidad_list')
+    else:
+        form = DisponibilidadForm(instance=disponibilidad)
+    return render(request, 'disponibilidad/disponibilidad_form.html', {'form': form})
+
+@login_required
+def disponibilidad_delete(request, pk):
+    disponibilidad = get_object_or_404(Disponibilidad, pk=pk)
+    if request.method == 'POST':
+        disponibilidad.delete()
+        messages.success(request, 'Disponibilidad eliminada.')
+        return redirect('disponibilidad_list')
+    return render(request, 'disponibilidad/disponibilidad_confirm_delete.html', {'disponibilidad': disponibilidad})

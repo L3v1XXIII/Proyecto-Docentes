@@ -1,0 +1,52 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Lista de Periodos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="color: #102c54;"><i class="fas fa-calendar-alt"></i> Periodos</h2>
+        <a href="{% url 'periodo_create' %}" class="btn btn-success">
+            <i class="fas fa-plus-circle"></i> Agregar Periodo
+        </a>
+    </div>
+
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre" value="{{ query|default:'' }}">
+            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Buscar</button>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nombre</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for periodo in periodos %}
+                    <tr>
+                        <td>{{ periodo.nombre }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'periodo_update' periodo.id %}" class="btn btn-sm btn-info">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                            <a href="{% url 'periodo_delete' periodo.id %}" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash-alt"></i> Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">No hay periodos registrados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
