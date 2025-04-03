@@ -1,9 +1,9 @@
 {% extends 'layouts/base-admin.html' %}
-{% block title %}Eliminar Grupo{% endblock %}
+{% block title %}Eliminar Cuatrimestre{% endblock %}
 {% block content %}
 <div class="container mt-5">
     <div class="alert alert-warning">
-        ¿Estás seguro de que deseas eliminar el grupo <strong>{{ grupo.nombre }}</strong>?
+        ¿Estás seguro de que deseas eliminar el Cuatrimestre <strong>{{ grupo.nombre }}</strong>?
     </div>
     <form method="post">
         {% csrf_token %}

@@ -1,0 +1,31 @@
+{% extends 'layouts/base-admin.html' %}
+
+{% block title %}Lista de Carreras{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Lista de Carreras</h2>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for carrera in carreras %}
+            <tr>
+                <td>{{ carrera.nombre }}</td>
+                <td>
+                    <a href="{% url 'asignatura_list' carrera.id %}" class="btn btn-sm btn-primary">Ver Asignaturas</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center">No hay carreras registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

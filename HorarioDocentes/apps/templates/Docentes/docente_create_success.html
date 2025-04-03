@@ -1,0 +1,15 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Docente Creado{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-body text-center">
+            <h3 class="text-success mb-4">¡Docente creado correctamente!</h3>
+            <p><strong>Usuario:</strong> {{ username }}</p>
+            <p><strong>Contraseña temporal:</strong> {{ password }}</p>
+            <a href="{% url 'docente_list' %}" class="btn btn-primary mt-4">Volver a la lista</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

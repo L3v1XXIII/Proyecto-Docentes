@@ -85,9 +85,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'hdn',  # Reemplaza con el nombre de tu base de datos
         'USER': 'root',  # El usuario predeterminado de MySQL en XAMPP es 'root'
-        'PASSWORD': '',  # La contraseña predeterminada de MySQL en XAMPP es vacía (puedes cambiarla en phpMyAdmin)
+        'PASSWORD': 'monze023',  # La contraseña predeterminada de MySQL en XAMPP es vacía (puedes cambiarla en phpMyAdmin)
         'HOST': '127.0.0.1',  # O 'localhost'
-        'PORT': '3309',  # El puerto predeterminado de MySQL
+        'PORT': '3306',  # El puerto predeterminado de MySQL
     }
 }
 
@@ -136,7 +136,10 @@ STATICFILES_DIRS = (
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'home.User'
-AUTHENTICATION_BACKENDS = ['apps.authentication.backends.EmailAuthBackend']
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Esto ya usa username y password
+]
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

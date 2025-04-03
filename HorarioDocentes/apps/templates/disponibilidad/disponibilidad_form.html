@@ -1,31 +1,51 @@
 {% extends 'layouts/base-docente.html' %}
 
-{% block title %}Formulario de Disponibilidad{% endblock %}
+{% block title %}Registrar Disponibilidad{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center vh-100 bg-light">
-    <div class="card shadow p-4" style="max-width: 720px; border-radius: 10px; width: 100%;">
-        <h4 class="text-center mb-4" style="color: #102c54;">
-            {% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Disponibilidad
-        </h4>
+    <div class="card shadow p-4" style="max-width: 720px; width: 100%;">
+        <h4 class="text-center mb-4" style="color: #102c54;">Registrar Disponibilidad</h4>
         <form method="POST">
             {% csrf_token %}
-            <div class="row g-2">
-                {% for field in form %}
-                    <div class="col-md-6">
-                        <label class="form-label small">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger small">{{ field.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
-                {% endfor %}
+            <div class="mb-3">
+                <h5>Asignaturas Disponibles</h5>
+                <table class="table table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Asignatura</th>
+                            <th>Horarios</th>
+                            <th>Seleccionar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for asignatura in asignaturas %}
+                        <tr>
+                            <td>{{ asignatura.nombre }}</td>
+                            <td>
+                                <ul>
+                                    {% for horario in asignatura.horarios.all %}
+                                    <li>{{ horario.dia }}: {{ horario.hora_inicio }} - {{ horario.hora_fin }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="asignaturas" value="{{ asignatura.id }}">
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">No hay asignaturas disponibles.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
             <div class="d-flex justify-content-between mt-4">
-                <button type="submit" class="btn btn-primary w-50 me-2">Guardar</button>
+                <button type="submit" class="btn btn-primary w-50" style="background-color: #102c54; color: white;">Guardar</button>
                 <a href="{% url 'disponibilidad_list' %}" class="btn btn-secondary w-50">Cancelar</a>
             </div>
         </form>
     </div>
 </div>
-{% endblock content %}
+{% endblock %}

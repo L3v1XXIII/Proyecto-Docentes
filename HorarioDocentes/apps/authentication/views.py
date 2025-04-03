@@ -4,8 +4,8 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador, Grupo, Periodo, Disponibilidad
-from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, HorarioForm, AdministradorForm, CambiarContraseñaForm, GrupoForm, PeriodoForm, DisponibilidadForm
+from apps.home.models import User, Docente, Asignatura, Carrera, Horario, Administrador, Grupo, Periodo, HorarioAsignatura, DisponibilidadDocente, HorarioDocente
+from .forms import LoginForm, SignUpForm, DocenteForm, AsignaturaForm, CarreraForm, AdministradorForm, CambiarContraseñaForm, GrupoForm, PeriodoForm, DisponibilidadDocenteForm, HorarioAsignaturaForm
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.contrib.auth.hashers import make_password
@@ -19,6 +19,7 @@ from django.db import models
 from django.db.models import Q
 from django.urls import reverse
 from django.template.loader import get_template
+from django.forms import modelformset_factory
 
 def login_view(request):
     form = LoginForm(request.POST or None)
@@ -26,20 +27,12 @@ def login_view(request):
 
     if request.method == "POST":
         if form.is_valid():
-            user = form.get_user()  # Obtener el usuario autenticado
-            
-            print(f"Usuario autenticado: {user}")
-
-            if user is not None:
-                login(request, user)
-                print(f"Usuario {user.email} autenticado correctamente")
-                return redirect_dashboard(user)
-            else:
-                msg = 'Datos incorrectos'
-                print("Autenticación fallida. Credenciales incorrectas.")
+            user = form.get_user()
+            login(request, user)
+            messages.success(request, f"Bienvenido, {user.username}")
+            return redirect_dashboard(user)
         else:
-            msg = 'Error en el formulario de login'
-            print(f"Errores en el formulario: {form.errors}")
+            msg = "Usuario o contraseña incorrectos."
 
     return render(request, "accounts/login.html", {"form": form, "msg": msg})
 
@@ -141,66 +134,85 @@ def user_delete(request, pk):
 
 @login_required
 def docente_list(request):
-    docentes = Docente.objects.all()
-    return render(request, 'Docentes/docente_list.html', {'docentes': docentes})
+    user = request.user
+
+    if user.role == 'admin':
+        administrador = Administrador.objects.filter(user=user).first()
+        if administrador and administrador.carreras.exists():
+            docentes = Docente.objects.filter(carrera__in=administrador.carreras.all())
+        else:
+            docentes = Docente.objects.none()
+    else:
+        docentes = Docente.objects.all()  # Superadmin u otros roles
+
+    return render(request, 'Docentes/docente_list.html', {"docentes": docentes})
+
 
 @login_required
 def docente_create(request):
     if request.method == "POST":
-        form = DocenteForm(request.POST, request.FILES)
+        form = DocenteForm(request.POST, request.FILES, user=request.user)
         if form.is_valid():
             docente = form.save(commit=False)
 
-            # 🔹 Generar una contraseña aleatoria de 10 caracteres
             password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+            username = docente.matricula
+            email = docente.email
 
-            # 🔹 Verificar si el usuario ya existe
-            user, created = User.objects.get_or_create(email=docente.email, defaults={
-                'role': 'docente',
-                'password': make_password(password),  # Guardar la contraseña cifrada
-                'is_active': True
-            })
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'Ya existe un usuario con esa matrícula.')
+                return render(request, 'Docentes/docente_form.html', {"form": form})
 
-            # 🔹 Asociar el usuario al docente solo si se creó un nuevo usuario
-            if created:
-                # Asociar el usuario creado al docente
-                docente.user = user
-                docente.save()
+            if User.objects.filter(email=email).exists():
+                messages.error(request, 'Ya existe un usuario con ese correo.')
+                return render(request, 'Docentes/docente_form.html', {"form": form})
 
-                # 🔹 Enviar email con la contraseña generada
-                send_mail(
-                    'Acceso al Sistema de Gestión de Horarios',
-                    f'Hola {docente.nombre},\n\n'
-                    f'Tu cuenta ha sido creada en el sistema de gestión de horarios.\n\n'
-                    f'🔹 **Email**: {docente.email}\n'
-                    f'🔹 **Contraseña**: {password}\n\n'
-                    f'⚠️ Te recomendamos cambiar tu contraseña después de iniciar sesión.\n\n'
-                    'Saludos,\nEquipo de Administración',
-                    'admin@tusistema.com',
-                    [docente.email],
-                    fail_silently=False,  # Cambiar a `True` si no quieres que falle la ejecución en caso de error
-                )
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                role='docente',
+                is_active=True
+            )
 
-            messages.success(request, "Docente creado exitosamente.")
-            return redirect('docente_list')
+            docente.user = user
+            docente.save()
+
+            request.session['docente_username'] = username
+            request.session['docente_password'] = password
+
+            send_mail(
+                'Acceso al Sistema de Gestión de Horarios',
+                f'Hola {docente.nombre},\n\n'
+                f'Tu cuenta ha sido creada.\nUsuario: {username}\nContraseña: {password}',
+                'admin@tusistema.com',
+                [email],
+                fail_silently=False,
+            )
+
+            return redirect('docente_created_success')
     else:
-        form = DocenteForm()
-    
+        form = DocenteForm(user=request.user)  # Pasamos el usuario en el formulario
+
     return render(request, 'Docentes/docente_form.html', {"form": form})
+
+
 
 
 @login_required
 def docente_update(request, pk):
     docente = get_object_or_404(Docente, pk=pk)
     if request.method == 'POST':
-        form = DocenteForm(request.POST, instance=docente)
+        form = DocenteForm(request.POST, instance=docente, user=request.user)  # Pasamos el usuario
         if form.is_valid():
             form.save()
             messages.success(request, "Docente actualizado exitosamente.")
             return redirect('docente_list')
     else:
-        form = DocenteForm(instance=docente)
+        form = DocenteForm(instance=docente, user=request.user)  # Aseguramos de pasar el usuario en el GET
+
     return render(request, 'Docentes/docente_form.html', {'form': form})
+
 
 @login_required
 def docente_delete(request, pk):
@@ -213,26 +225,38 @@ def docente_delete(request, pk):
 
 @login_required
 def asignatura_list(request):
-    query = request.GET.get("q")
-    asignaturas = Asignatura.objects.all()
-    if query:
-        asignaturas = asignaturas.filter(
-            Q(nombre__icontains=query) |
-            Q(clave__icontains=query) |
-            Q(matricula__icontains=query)
-        )
-    return render(request, "asignaturas/asignatura_list.html", {"asignaturas": asignaturas, "query": query})
+    user = request.user
+
+    if user.role == 'admin':
+        administrador = Administrador.objects.filter(user=user).first()
+        if administrador and administrador.carreras.exists():
+            asignaturas = Asignatura.objects.filter(
+                models.Q(carrera__in=administrador.carreras.all()) | models.Q(visible_para_todos=True)
+            )
+        else:
+            asignaturas = Asignatura.objects.filter(visible_para_todos=True)
+    else:
+        asignaturas = Asignatura.objects.all()
+
+    return render(request, 'Asignaturas/asignatura_list.html', {'asignaturas': asignaturas})
+
+
+
 
 @login_required
 def asignatura_create(request):
+    form = AsignaturaForm(request.POST or None, user=request.user)
+
     if request.method == "POST":
-        form = AsignaturaForm(request.POST)
         if form.is_valid():
-            form.save()
+            asignatura = form.save(commit=False)
+            asignatura.save()
+            messages.success(request, "Asignatura creada correctamente.")
             return redirect("asignatura_list")
-    else:
-        form = AsignaturaForm()
-    return render(request, "asignaturas/asignatura_form.html", {"form": form})
+        else:
+            messages.error(request, "Corrige los errores del formulario.")
+
+    return render(request, "Asignaturas/asignatura_form.html", {"form": form})
 
 @login_required
 def asignatura_update(request, pk):
@@ -304,71 +328,99 @@ def carrera_delete(request, pk):
 
 @login_required
 def horario_list(request):
-    horarios = Horario.objects.select_related('materia', 'docente')
+    horarios = HorarioAsignatura.objects.all()
+    return render(request, 'horarios/horario_list.html', {'horarios': horarios})
 
-    dias_dict = {
-        'Lunes': 1,
-        'Martes': 2,
-        'Miércoles': 3,
-        'Jueves': 4,
-        'Viernes': 5,
-        'Sábado': 6,
-    }
-
-    eventos = []
-    for h in horarios:
-        inicio, fin = h.hora.split(' - ')
-        eventos.append({
-            'title': f"{h.materia.nombre} - {h.docente.nombre}",
-            'startTime': inicio,
-            'endTime': fin,
-            'daysOfWeek': [dias_dict[h.dia]],
-            'url_edit': reverse('horario_update', args=[h.id]),
-            'url_delete': reverse('horario_delete', args=[h.id]),
-        })
-
-    return render(request, 'horarios/horario_list.html', {'eventos': eventos})
-
-
+# Vista para crear o editar un horario
 @login_required
 def horario_create(request):
-    form = HorarioForm(request.POST or None)
-    disponibilidades = None
+    user = request.user
+    error_message = None
+    overlap_message = None  # Nuevo mensaje para el solapamiento
 
-    if request.method == 'POST':
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Horario asignado correctamente.")
-            return redirect('horario_list')
+    # Verificar el rol del usuario (si es administrador)
+    if user.role == 'admin':
+        administrador = Administrador.objects.filter(user=user).first()
+        if administrador and administrador.carreras.exists():
+            asignaturas = Asignatura.objects.filter(
+                models.Q(carrera__in=administrador.carreras.all()) | models.Q(visible_para_todos=True)
+            )
+        else:
+            asignaturas = Asignatura.objects.filter(visible_para_todos=True)
     else:
-        docente_id = request.GET.get('docente') or form.initial.get("docente") or None
-        if docente_id:
-            disponibilidades = Disponibilidad.objects.filter(docente_id=docente_id)
+        asignaturas = Asignatura.objects.all()
 
-    return render(request, 'horarios/horario_form.html', {
+    # Obtener el formulario
+    form = HorarioAsignaturaForm(request.POST or None)
+    
+    if request.method == "POST":
+        if form.is_valid():
+            horario = form.save(commit=False)
+            asignatura = horario.asignatura
+
+            # Verificar si la suma total de horas excede 3 horas
+            total_duracion = sum(
+                (h.hora_fin.hour - h.hora_inicio.hour) * 60 + (h.hora_fin.minute - h.hora_inicio.minute)
+                for h in HorarioAsignatura.objects.filter(asignatura=asignatura)
+            ) + (horario.hora_fin.hour - horario.hora_inicio.hour) * 60 + (horario.hora_fin.minute - horario.hora_inicio.minute)
+
+            # Si excede 3 horas, mostrar un mensaje de advertencia
+            if total_duracion > 180:
+                error_message = "La asignatura excede el límite de 3 horas semanales."
+
+            # Verificar si hay solapamientos de horarios
+            overlapping_hours = HorarioAsignatura.objects.filter(
+                asignatura=asignatura,
+                dia=horario.dia,
+                hora_inicio__lt=horario.hora_fin,
+                hora_fin__gt=horario.hora_inicio
+            ).exclude(pk=horario.pk)  # Excluir el horario actual de la comprobación de solapamiento
+
+            if overlapping_hours.exists():
+                overlap_message = "Este horario se solapa con otro horario de la asignatura."
+
+            if not error_message and not overlap_message:
+                # Guardar el horario si no hay error ni solapamiento
+                horario.save()
+                return redirect("horario_list")
+
+    return render(request, "horarios/horario_form.html", {
         'form': form,
-        'disponibilidades': disponibilidades
+        'asignaturas': asignaturas,
+        'error_message': error_message,  # Pasar el mensaje de error si excede el límite de horas
+        'overlap_message': overlap_message,  # Pasar el mensaje de solapamiento si existe
     })
 
+
+
+
+# Vista para actualizar un horario
 @login_required
 def horario_update(request, pk):
-    horario = get_object_or_404(Horario, pk=pk)
-    form = HorarioForm(request.POST or None, instance=horario)
-    if form.is_valid():
-        form.save()
-        messages.success(request, "Horario actualizado.")
-        return redirect('horario_list')
-    return render(request, 'horarios/horario_form.html', {'form': form})
+    horario = get_object_or_404(HorarioAsignatura, pk=pk)
+    form = HorarioAsignaturaForm(request.POST or None, instance=horario)
 
+    if request.method == "POST":
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Horario actualizado con éxito.")
+            return redirect("horario_list")
+        else:
+            messages.error(request, "Error al actualizar el horario.")
+
+    return render(request, "horarios/horario_form.html", {"form": form})
+
+# Vista para eliminar un horario
 @login_required
 def horario_delete(request, pk):
-    horario = get_object_or_404(Horario, pk=pk)
-    if request.method == 'POST':
-        horario.delete()
-        messages.success(request, "Horario eliminado.")
-        return redirect('horario_list')
-    return render(request, 'horarios/horario_confirm_delete.html', {'horario': horario})
+    horario = get_object_or_404(HorarioAsignatura, pk=pk)
 
+    if request.method == "POST":
+        horario.delete()
+        messages.success(request, "Horario eliminado con éxito.")
+        return redirect("horario_list")
+
+    return render(request, "horarios/horario_confirm_delete.html", {"horario": horario})
         
 # Listar Administradores
 @login_required
@@ -395,18 +447,22 @@ def administrador_create(request):
         form = AdministradorForm(request.POST)
         if form.is_valid():
             administrador = form.save(commit=False)
-
-            # Generar contraseña
             password = get_random_string(length=10)
             email = administrador.email
+            clave = administrador.clave  # usamos la clave como username
 
-            # Validar que no exista el user
+            # Validar que no exista el usuario por username o email
+            if User.objects.filter(username=clave).exists():
+                messages.error(request, 'Ya existe un usuario con esa clave.')
+                return render(request, 'Administradores/administrador_form.html', {'form': form, 'accion': 'Crear'})
+
             if User.objects.filter(email=email).exists():
                 messages.error(request, 'Ya existe un usuario con ese correo.')
                 return render(request, 'Administradores/administrador_form.html', {'form': form, 'accion': 'Crear'})
 
             # Crear usuario
             user = User.objects.create(
+                username=clave,
                 email=email,
                 role='admin',
                 password=make_password(password),
@@ -416,14 +472,18 @@ def administrador_create(request):
             administrador.user = user
             administrador.save()
 
-            # Guardar email y password en sesión
+            # Guardar datos en sesión por si quieres mostrarlos en otra vista
             request.session['admin_email'] = email
             request.session['admin_password'] = password
+            request.session['admin_username'] = clave
 
-            # Enviar correo
             send_mail(
                 'Acceso al Sistema de Gestión de Horarios',
-                f'Hola {administrador.nombre},\n\nTu cuenta ha sido creada.\nCorreo: {email}\nContraseña: {password}',
+                f'Hola {administrador.nombre},\n\n'
+                f'Tu cuenta ha sido creada.\n\n'
+                f'🔹 Usuario: {clave}\n'
+                f'🔹 Contraseña: {password}\n\n'
+                f'⚠️ Te recomendamos cambiar tu contraseña después de iniciar sesión.',
                 'admin@tusistema.com',
                 [email],
                 fail_silently=False,
@@ -439,15 +499,15 @@ def administrador_create(request):
 
 @login_required
 def admin_created_success(request):
-    email = request.session.pop('admin_email', None)
+    username = request.session.pop('admin_username', None)
     password = request.session.pop('admin_password', None)
 
-    if not email or not password:
+    if not username or not password:
         messages.warning(request, "No hay información del nuevo administrador.")
         return redirect('administrador_list')
 
     return render(request, 'Administradores/admin_created_success.html', {
-        'email': email,
+        'username': username,
         'password': password
     })
 
@@ -578,98 +638,89 @@ def periodo_delete(request, pk):
 
 @login_required
 def disponibilidad_list(request):
-    docente = get_object_or_404(Docente, user=request.user)
-    disponibilidades = Disponibilidad.objects.filter(docente=docente)
-    materias = Asignatura.objects.all()
-
-    dias_dict = {
-        'Domingo': 0,
-        'Lunes': 1,
-        'Martes': 2,
-        'Miércoles': 3,
-        'Jueves': 4,
-        'Viernes': 5,
-        'Sábado': 6,
-    }
-
-    eventos = []
-    for d in disponibilidades:
-        eventos.append({
-            "title": d.materia.nombre if d.materia else "Disponible",
-            "daysOfWeek": [dias_dict[d.dia]],
-            "startTime": d.hora_inicio,
-            "endTime": d.hora_fin,
-            "url_edit": reverse("disponibilidad_update", args=[d.id]),
-            "url_delete": reverse("disponibilidad_delete", args=[d.id]),
-        })
+    query = request.GET.get("q")
+    if query:
+        disponibilidades = DisponibilidadDocente.objects.filter(
+            docente__nombre__icontains=query
+        )
+    else:
+        disponibilidades = DisponibilidadDocente.objects.all()
 
     return render(request, 'disponibilidad/disponibilidad_list.html', {
         'disponibilidades': disponibilidades,
-        'materias': materias,
-        'eventos': eventos,  # <<<< necesario para el calendario
+        'query': query
     })
 
 @login_required
 def disponibilidad_create(request):
-    docente = get_object_or_404(Docente, user=request.user)
+    docente = request.user.docente
+    asignaturas = Asignatura.objects.filter(carrera=docente.carrera)
+
     if request.method == 'POST':
-        form = DisponibilidadForm(request.POST, docente=docente)
-        if form.is_valid():
+        form = DisponibilidadDocenteForm(request.POST)
+        
+        if form.is_valid():  # Verifica si el formulario es válido
             disponibilidad = form.save(commit=False)
-            disponibilidad.docente = docente
-            disponibilidad.save()
-            messages.success(request, "Disponibilidad registrada.")
+            disponibilidad.docente = docente  # Asociamos el docente con la disponibilidad
+            
+            # Asociamos las asignaturas seleccionadas con la disponibilidad
+            selected_asignaturas_ids = request.POST.getlist('asignaturas')  # Obtener las asignaturas seleccionadas
+            
+            # Agregar las asignaturas seleccionadas a la disponibilidad
+            for asignatura_id in selected_asignaturas_ids:
+                asignatura = Asignatura.objects.get(id=asignatura_id)
+                disponibilidad.asignaturas.add(asignatura)
+
+            # Agregar los horarios asociados con esas asignaturas
+            for asignatura_id in selected_asignaturas_ids:
+                asignatura = Asignatura.objects.get(id=asignatura_id)
+                for horario in asignatura.horarios.all():
+                    disponibilidad.horarios.add(horario)
+
+            disponibilidad.save()  # Guardamos la disponibilidad sin calcular las horas
+
+            messages.success(request, "Disponibilidad registrada exitosamente.")
             return redirect('disponibilidad_list')
+        else:
+            messages.error(request, "Por favor, corrige los errores del formulario.")
     else:
-        form = DisponibilidadForm(docente=docente)
-    
-    return render(request, 'disponibilidad/disponibilidad_form.html', {'form': form})
+        form = DisponibilidadDocenteForm()
+
+    return render(request, 'disponibilidad/disponibilidad_form.html', {'form': form, 'asignaturas': asignaturas})
 
 
 @login_required
 def disponibilidad_update(request, pk):
-    disponibilidad = get_object_or_404(Disponibilidad, pk=pk)
+    disponibilidad = get_object_or_404(DisponibilidadDocente, pk=pk)
     if request.method == 'POST':
-        form = DisponibilidadForm(request.POST, instance=disponibilidad)
+        form = DisponibilidadDocenteForm(request.POST, instance=disponibilidad, user=request.user)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Disponibilidad actualizada.')
-            return redirect('disponibilidad_list')
+            try:
+                form.save()
+                messages.success(request, "Disponibilidad actualizada exitosamente.")
+                return redirect('disponibilidad_list')  # Redirect to the list of disponibilidades
+            except ValueError as e:
+                # If the total hours exceed the limit, display an error message
+                messages.error(request, str(e))
     else:
-        form = DisponibilidadForm(instance=disponibilidad)
+        form = DisponibilidadDocenteForm(instance=disponibilidad, user=request.user)
+
     return render(request, 'disponibilidad/disponibilidad_form.html', {'form': form})
 
 @login_required
 def disponibilidad_delete(request, pk):
-    disponibilidad = get_object_or_404(Disponibilidad, pk=pk)
+    disponibilidad = get_object_or_404(DisponibilidadDocente, pk=pk)
     if request.method == 'POST':
         disponibilidad.delete()
-        messages.success(request, 'Disponibilidad eliminada.')
+        messages.success(request, 'Disponibilidad eliminada exitosamente.')
         return redirect('disponibilidad_list')
     return render(request, 'disponibilidad/disponibilidad_confirm_delete.html', {'disponibilidad': disponibilidad})
 
 
-from datetime import datetime
-
-@login_required
-def mi_horario_view(request):
-    user = request.user
-    docente = get_object_or_404(Docente, user=user)
-
-    horarios = Horario.objects.filter(docente=docente)
-
-    dias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
-
-    # Toma la hora de inicio del string '07:00 - 08:30'
-    horas = sorted(set(
-        h.hora.split(' - ')[0] if isinstance(h.hora, str) else h.hora.strftime('%H:%M')
-        for h in horarios
-    ))
 
     horario_dict = {}
     for h in horarios:
-        hora_inicio = h.hora.split(' - ')[0] if isinstance(h.hora, str) else h.hora.strftime('%H:%M')
-        clave = f"{h.dia}-{hora_inicio}"
+        clave = f"{h.dia}-{h.hora.strftime('%H:%M')}"
         horario_dict[clave] = h
 
     return render(request, 'Docentes/mi_horario.html', {
@@ -677,3 +728,91 @@ def mi_horario_view(request):
         'horas': horas,
         'horario_dict': horario_dict,
     })
+    
+@login_required
+def docente_created_success(request):
+    username = request.session.pop('docente_username', None)
+    password = request.session.pop('docente_password', None)
+
+    if not username or not password:
+        messages.warning(request, "No hay información del nuevo docente.")
+        return redirect('docente_list')
+
+    return render(request, 'Docentes/docente_created_success.html', {
+        'username': username,
+        'password': password
+    })
+@login_required
+def carrera_list2(request):
+    user = request.user
+    if user.role == 'admin':
+        administrador = Administrador.objects.filter(user=user).first()
+        if administrador:
+            carreras = administrador.carreras.all()
+            return render(request, 'Horarios/carrera_list.html', {'carreras': carreras})
+    return redirect('home')
+
+@login_required
+def asignatura_list2(request, carrera_id):
+    carrera = get_object_or_404(Carrera, pk=carrera_id)
+    asignaturas = Asignatura.objects.filter(carrera=carrera)
+    return render(request, 'Horarios/asignatura_list.html', {'asignaturas': asignaturas, 'carrera': carrera})
+
+@login_required
+def docente_list2(request, asignatura_id):
+    asignatura = get_object_or_404(Asignatura, pk=asignatura_id)
+    docentes = Docente.objects.filter(carrera=asignatura.carrera)
+    
+    if request.method == 'POST':
+        # Obtener el ID del docente seleccionado (ahora seleccionamos un solo docente)
+        docente_id = request.POST.get('docente')
+        
+        if docente_id:
+            docente = Docente.objects.get(id=docente_id)
+            
+            # Crear un nuevo HorarioDocente con el docente y la asignatura
+            horario_docente = HorarioDocente(
+                docente=docente,
+                asignatura=asignatura
+            )
+            # Guardamos primero el objeto HorarioDocente para obtener un 'id'
+            horario_docente.save()
+            
+            # Ahora podemos asociar los horarios de la asignatura al docente
+            for horario in asignatura.horarios.all():
+                horario_docente.horarios.add(horario)
+            
+            # Guardamos nuevamente el objeto después de agregar los horarios
+            horario_docente.save()
+            
+            messages.success(request, 'Asignación de horarios realizada exitosamente.')
+            return redirect('docente_list', asignatura_id=asignatura.id)
+
+    return render(request, 'Horarios/docente_list.html', {'docentes': docentes, 'asignatura': asignatura})
+
+
+# Vista en views.py
+def mi_horario_view(request):
+    # Obtención de horas y días
+    horas = ['08:00', '09:00', '10:00']  # Ejemplo
+    dias = ['Lunes', 'Martes', 'Miércoles']  # Ejemplo
+
+    horario_dict = {}
+    # Aquí llenamos el diccionario con las asignaciones
+    # Ejemplo:
+    for dia in dias:
+        for hora in horas:
+            clave = f'{dia}-{hora}'
+            # Suponiendo que 'materia' y 'docente' son objetos
+            horario_dict[clave] = {
+                'materia': 'Matemáticas',  # Solo el nombre de la materia
+                'docente': 'Juan Pérez'  # Solo el nombre del docente
+            }
+
+    # Pasar el diccionario a la plantilla
+    return render(request, 'Docentes/mi_horario.html', {
+        'horario_dict': horario_dict,
+        'horas': horas,
+        'dias': dias
+    })
+

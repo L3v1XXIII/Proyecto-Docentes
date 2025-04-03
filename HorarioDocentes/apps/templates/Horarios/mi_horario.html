@@ -1,0 +1,42 @@
+{% extends 'layouts/base-docente.html' %}
+
+{% block title %}Mi Horario{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Mi Horario</h2>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Hora</th>
+                {% for dia in dias %}
+                <th>{{ dia }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for hora in horas %}
+            <tr>
+                <th class="bg-light">{{ hora }}</th>
+                {% for dia in dias %}
+                {% with clave=dia|add:"-"|add:hora %}
+                    {% if clave in horario_dict %}
+                    <td>
+                        {{ horario_dict[clave].materia.nombre }}<br>
+                        <small class="text-muted">{{ horario_dict[clave].docente.nombre }}</small>
+                    </td>
+                    {% else %}
+                    <td>-</td>
+                    {% endif %}
+                {% endwith %}
+                {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="{{ dias|length }}" class="text-center">No tienes asignado un horario.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -7,8 +7,7 @@
     <div class="card shadow p-4" style="max-width: 500px; width: 100%;">
         <h4 class="text-center mb-4 text-danger"><i class="fas fa-trash-alt"></i> Confirmar Eliminación</h4>
         <p class="text-center">
-            ¿Estás seguro de que deseas eliminar la disponibilidad del <strong>{{ disponibilidad.dia }}</strong>
-            de <strong>{{ disponibilidad.hora_inicio }}</strong> a <strong>{{ disponibilidad.hora_fin }}</strong>?
+            ¿Estás seguro de que deseas eliminar la disponibilidad de la asignatura <strong>{{ disponibilidad.asignatura.nombre }}</strong> en el día <strong>{{ disponibilidad.horarios.all.0.dia }}</strong> de <strong>{{ disponibilidad.horarios.all.0.hora_inicio }}</strong> a <strong>{{ disponibilidad.horarios.all.0.hora_fin }}</strong>?
         </p>
 
         <form method="POST" class="text-center mt-4">

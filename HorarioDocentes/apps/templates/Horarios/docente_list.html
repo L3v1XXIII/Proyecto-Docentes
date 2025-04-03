@@ -1,0 +1,26 @@
+{% extends 'layouts/base-admin.html' %}
+
+{% block title %}Asignar Docentes a Asignaturas{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Asignar Docente para la Asignatura: {{ asignatura.nombre }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            {% for docente in docentes %}
+            <div class="col-md-4">
+                <label class="form-check-label">
+                    <!-- Usamos radio button en lugar de checkbox -->
+                    <input type="radio" class="form-check-input" name="docente" value="{{ docente.id }}">
+                    {{ docente.nombre }} {{ docente.apellido_paterno }} {{ docente.apellido_materno }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Asignar Docente</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

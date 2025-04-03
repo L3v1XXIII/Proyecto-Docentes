@@ -1,85 +1,48 @@
 {% extends 'layouts/base-docente.html' %}
 
-{% block title %}Horarios Asignados{% endblock %}
+{% block title %}Lista de Disponibilidades{% endblock %}
 
 {% block content %}
-<link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css' rel='stylesheet' />
-<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 style="color: #102c54;"><i class="fas fa-calendar-alt"></i> Mi Disponibilidad</h2>
-    <a href="{% url 'disponibilidad_create' %}" class="btn btn-success">
-      <i class="fas fa-plus-circle"></i> Agregar Disponibilidad
-    </a>
-  </div>
-
-  <div id='calendar'></div>
-  
+<div class="container mt-5">
+    <h2>Disponibilidades del Docente</h2>
+    <form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Buscar por nombre de docente" value="{{ query|default:'' }}">
+            <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i> Buscar</button>
+        </div>
+    </form>
+    <a href="{% url 'disponibilidad_create' %}" class="btn btn-primary mb-3">Agregar Disponibilidad</a>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Docente</th>
+                <th>Asignatura</th>
+                <th>Horarios</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for disponibilidad in disponibilidades %}
+            <tr>
+                <td>{{ disponibilidad.docente.nombre }}</td>
+                <td>{{ disponibilidad.asignatura.nombre }}</td>
+                <td>
+                    <ul>
+                        {% for horario in disponibilidad.horarios.all %}
+                        <li>{{ horario.dia }}: {{ horario.hora_inicio }} - {{ horario.hora_fin }}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+                <td>
+                    <a href="{% url 'disponibilidad_delete' disponibilidad.id %}" class="btn btn-sm btn-danger"><i class="fas fa-trash-alt"></i> Eliminar</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No hay disponibilidades registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-      initialView: 'timeGridWeek',
-      firstDay: 1,
-      hiddenDays: [0],
-      slotMinTime: '07:00:00',
-      slotMaxTime: '22:00:00',
-      allDaySlot: false,
-      headerToolbar: {
-        left: '',
-        center: 'title',
-        right: ''
-      },
-      dayHeaderFormat: { weekday: 'long' },
-      events: [
-        {% for e in eventos %}
-        {
-          title: "{{ e.title|escapejs }}",
-          daysOfWeek: [{{ e.daysOfWeek.0 }}],
-          startTime: "{{ e.startTime }}",
-          endTime: "{{ e.endTime }}",
-          extendedProps: {
-            url_edit: "{{ e.url_edit }}",
-            url_delete: "{{ e.url_delete }}"
-          }
-        },
-        {% endfor %}
-      ],
-      eventClick: function(info) {
-        Swal.fire({
-          title: '¿Qué deseas hacer?',
-          text: info.event.title,
-          icon: 'question',
-          showCancelButton: true,
-          showDenyButton: true,
-          confirmButtonText: 'Editar',
-          denyButtonText: 'Eliminar',
-          cancelButtonText: 'Cancelar'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            window.location.href = info.event.extendedProps.url_edit;
-          } else if (result.isDenied) {
-            Swal.fire({
-              title: '¿Estás seguro?',
-              text: 'Esta acción no se puede deshacer.',
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Sí, eliminar',
-              cancelButtonText: 'Cancelar'
-            }).then((res) => {
-              if (res.isConfirmed) {
-                window.location.href = info.event.extendedProps.url_delete;
-              }
-            });
-          }
-        });
-      }
-    });
-    calendar.render();
-  });
-</script>
 {% endblock %}

@@ -7,51 +7,45 @@ import random
 import string
 from django.core.exceptions import ValidationError
 
+
 # Custom User Manager
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError("The Email field must be set")
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+    def create_user(self, username, password=None, **extra_fields):
+        if not username:
+            raise ValueError("El nombre de usuario debe ser proporcionado")
+
+        user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, username, password=None, **extra_fields):
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_staff', True)
-        return self.create_user(email, password, **extra_fields)
 
-# User Model with Roles
+        return self.create_user(username=username, password=password, **extra_fields)
+
+
+# Custom User model
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('superadmin', 'Super Administrator'),
         ('admin', 'Administrator'),
         ('docente', 'Docente'),
     )
-    username = None
+
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
 
-    groups = models.ManyToManyField(
-        "auth.Group",
-        related_name="custom_user_groups",
-        blank=True
-    )
-    user_permissions = models.ManyToManyField(
-        "auth.Permission",
-        related_name="custom_user_permissions",
-        blank=True
-    )
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
 
     objects = CustomUserManager()
 
     def __str__(self):
-        return self.email
+        return self.username
+
+
 
 
 # Modelo de Carrera
@@ -63,7 +57,7 @@ class Carrera(models.Model):
     def __str__(self):
         return self.nombre
 
-# Modelo para Administrador
+# Administrador
 class Administrador(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'admin'})
     nombre = models.CharField(max_length=100)
@@ -72,34 +66,28 @@ class Administrador(models.Model):
     clave = models.CharField(max_length=100, null=True, blank=True)
     email = models.EmailField(unique=True)
     telefono = models.CharField(max_length=15)
-    carrera = models.ForeignKey(Carrera, on_delete=models.SET_NULL, null=True, blank=True)
+    carreras = models.ManyToManyField('Carrera', blank=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.user:
-            # Generar una contraseña aleatoria de 10 caracteres
             password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-
-            # Crear un usuario con el mismo email
-            user = User.objects.create(
+            user = User.objects.create_user(
+                username=self.clave,
                 email=self.email,
+                password=password,
                 role='admin',
-                password=make_password(password),  # Encriptar la contraseña
                 is_active=True
             )
-
-            # Asociar el usuario al docente
             self.user = user
 
-            # Opcional: Enviar email con la contraseña al usuario
             send_mail(
                 'Acceso al Sistema de Gestión de Horarios',
-                f'Hola {self.nombre},\n\nTu cuenta ha sido creada.\n\nEmail: {self.email}\nContraseña: {password}\n\nPor favor cambia tu contraseña después de iniciar sesión.',
-                'admin@tusistema.com',  # Cambia esto por el email del sistema
+                f'Hola {self.nombre},\n\nTu cuenta ha sido creada.\n\nUsuario: {self.clave}\nContraseña: {password}\n\nPor favor cambia tu contraseña después de iniciar sesión.',
+                'admin@tusistema.com',
                 [self.email],
                 fail_silently=True,
             )
-
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -112,7 +100,7 @@ class Periodo(models.Model):
     def __str__(self):
         return self.nombre
 
-# Modelo de Docente
+# Docente
 class Docente(models.Model):
     nombre = models.CharField(max_length=100)
     apellido_paterno = models.CharField(max_length=100)
@@ -126,37 +114,33 @@ class Docente(models.Model):
     RFC = models.CharField(max_length=13)
     comprobante_domicilio = models.FileField(upload_to='comprobantes_domicilio/', null=True, blank=True)
     titulo = models.FileField(upload_to='titulos/', null=True, blank=True)
+    carrera = models.ForeignKey('Carrera', on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, limit_choices_to={'role': 'docente'})
 
     def save(self, *args, **kwargs):
         if not self.user:
-            # Generar una contraseña aleatoria de 10 caracteres
             password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-
-            # Crear un usuario con el mismo email
-            user = User.objects.create(
+            user = User.objects.create_user(
+                username=self.matricula,
                 email=self.email,
+                password=password,
                 role='docente',
-                password=make_password(password),  # Encriptar la contraseña
                 is_active=True
             )
-
-            # Asociar el usuario al docente
             self.user = user
 
-            # Opcional: Enviar email con la contraseña al usuario
             send_mail(
                 'Acceso al Sistema de Gestión de Horarios',
-                f'Hola {self.nombre},\n\nTu cuenta ha sido creada.\n\nEmail: {self.email}\nContraseña: {password}\n\nPor favor cambia tu contraseña después de iniciar sesión.',
-                'admin@tusistema.com',  # Cambia esto por el email del sistema
+                f'Hola {self.nombre},\n\nTu cuenta ha sido creada.\n\nUsuario: {self.matricula}\nContraseña: {password}\n\nPor favor cambia tu contraseña después de iniciar sesión.',
+                'admin@tusistema.com',
                 [self.email],
                 fail_silently=True,
             )
-
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.email
+
 
 # Modelo de Asignatura
 class Asignatura(models.Model):
@@ -165,7 +149,9 @@ class Asignatura(models.Model):
     matricula = models.CharField(max_length=10, unique=True)
     carrera = models.ForeignKey('Carrera', on_delete=models.CASCADE, null=True, blank=True) 
     periodo = models.ForeignKey('Periodo', on_delete=models.CASCADE, null=True, blank=True)  
-
+    Grupo = models.ForeignKey('Grupo', on_delete=models.SET_NULL, null=True, blank=True)
+    visible_para_todos = models.BooleanField(default=False)  
+    
     def __str__(self):
         return self.nombre
 
@@ -176,28 +162,6 @@ class Grupo(models.Model):
     def __str__(self):
         return self.nombre
 
-#Recomendacion de horarios
-class Disponibilidad(models.Model):
-    DIAS_SEMANA = [
-        ('Lunes', 'Lunes'),
-        ('Martes', 'Martes'),
-        ('Miércoles', 'Miércoles'),
-        ('Jueves', 'Jueves'),
-        ('Viernes', 'Viernes'),
-        ('Sábado', 'Sábado'),
-        ('Domingo', 'Domingo'),
-    ]
-
-    HORAS_DIA = [(f"{hora:02d}:00", f"{hora:02d}:00") for hora in range(7, 22)]  # De 07:00 a 21:00
-
-    docente = models.ForeignKey(Docente, on_delete=models.CASCADE, related_name='disponibilidades')
-    materia = models.ForeignKey('Asignatura', on_delete=models.CASCADE, null=True, blank=True) 
-    dia = models.CharField(max_length=10, choices=DIAS_SEMANA)
-    hora_inicio = models.CharField(max_length=5, choices=HORAS_DIA)
-    hora_fin = models.CharField(max_length=5, choices=HORAS_DIA)
-
-    def __str__(self):
-        return f"{self.docente} - {self.dia} {self.hora_inicio}-{self.hora_fin}"
 
 # Asignación de Docentes a Horarios y Asignaturas
 class Horario(models.Model):
@@ -231,3 +195,88 @@ class Horario(models.Model):
     
     def __str__(self):
         return f"{self.materia} - {self.docente} ({self.dia} {self.hora})"
+
+# Horario de Asignatura
+class HorarioAsignatura(models.Model):
+    DIAS_CHOICES = [
+        ('lunes', 'Lunes'),
+        ('martes', 'Martes'),
+        ('miercoles', 'Miércoles'),
+        ('jueves', 'Jueves'),
+        ('viernes', 'Viernes'),
+        ('sabado', 'Sábado'),
+    ]
+
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE, related_name='horarios')
+    dia = models.CharField(max_length=10, choices=DIAS_CHOICES)
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+
+    class Meta:
+        unique_together = ('asignatura', 'dia', 'hora_inicio')
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        # Verificar si hora_inicio y hora_fin no son None
+        if self.hora_inicio is None or self.hora_fin is None:
+            raise ValidationError("Las horas de inicio y fin deben ser válidas.")
+
+        if self.hora_inicio >= self.hora_fin:
+            raise ValidationError("La hora de inicio debe ser menor que la hora de fin.")
+
+        duracion = (self.hora_fin.hour - self.hora_inicio.hour) * 60 + (self.hora_fin.minute - self.hora_inicio.minute)
+        if duracion > 180:
+            raise ValidationError("La duración total de la asignatura en un día no puede exceder 3 horas.")
+
+        # Verificación de solapamientos
+        solapamientos = HorarioAsignatura.objects.filter(
+            asignatura__carrera=self.asignatura.carrera,
+            dia=self.dia,
+            hora_inicio__lt=self.hora_fin,
+            hora_fin__gt=self.hora_inicio
+        ).exclude(asignatura=self.asignatura)
+
+        if solapamientos.exists():
+            raise ValidationError("Ya existe una materia de la misma carrera en ese horario.")
+
+        total_duracion = sum(
+            (h.hora_fin.hour - h.hora_inicio.hour) * 60 + (h.hora_fin.minute - h.hora_inicio.minute)
+            for h in HorarioAsignatura.objects.filter(asignatura=self.asignatura).exclude(pk=self.pk)
+        ) + duracion
+
+        if total_duracion > 180:
+            raise ValidationError("La suma de todos los horarios de esta asignatura no puede exceder 3 horas semanales.")
+
+    def __str__(self):
+        return f"{self.asignatura.nombre} - {self.dia} ({self.hora_inicio} a {self.hora_fin})"
+
+class DisponibilidadDocente(models.Model):
+    docente = models.ForeignKey(Docente, on_delete=models.CASCADE, related_name='disponibilidades')
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE)
+    horarios = models.ManyToManyField(HorarioAsignatura)  # Relación ManyToMany para los horarios
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)  # Guardamos el objeto DisponibilidadDocente primero
+        # Agregamos las relaciones ManyToMany después de guardar el objeto principal
+        self.horarios.set(self.horarios.all())  # Esto asegura que los horarios se asocien correctamente
+        super().save(*args, **kwargs)  # Guardamos nuevamente para mantener la relación ManyToMany
+
+class HorarioDocente(models.Model):
+    docente = models.ForeignKey(Docente, on_delete=models.CASCADE, related_name='horarios_docente')
+    asignatura = models.ForeignKey(Asignatura, on_delete=models.CASCADE)
+    horarios = models.ManyToManyField(HorarioAsignatura)
+    horas_semanales = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        # Recalcular las horas semanales cuando los horarios son asignados
+        self.horas_semanales = sum(
+            (horario.hora_fin.hour - horario.hora_inicio.hour) * 60 + (horario.hora_fin.minute - horario.hora_inicio.minute)
+            for horario in self.horarios.all()
+        ) // 60  # Convertir minutos a horas
+        if self.horas_semanales > 18:
+            raise ValueError("La cantidad total de horas semanales no puede exceder 18 horas.")
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.docente} - {self.asignatura.nombre}"

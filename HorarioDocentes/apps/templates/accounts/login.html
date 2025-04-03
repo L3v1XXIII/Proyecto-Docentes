@@ -3,8 +3,6 @@
 {% block title %} Iniciar Sesión {% endblock title %}
 
 {% block content %}
-
-<!-- Contenido de la página -->
 <div class="container mt--8 pb-5">
     <div class="row justify-content-center">
         <div class="col-lg-5 col-md-7">
@@ -17,39 +15,35 @@
                 <div class="card-body px-lg-5 py-lg-5">
                     <div class="text-center text-muted mb-4">
                         {% if msg %}
-                            <div class="alert alert-danger" role="alert">
-                                {{ msg }}
-                            </div>
+                            <div class="alert alert-danger" role="alert">{{ msg }}</div>
                         {% else %}
-                            <p>Ingresa tu correo y contraseña</p>
+                            <p>Ingresa tu usuario y contraseña</p>
                         {% endif %}
                     </div>
                     <form method="POST">
-                      {% csrf_token %}
-                      
-                      <div class="form-group mb-3">
-                          <div class="input-group input-group-alternative">
-                              <div class="input-group-prepend">
-                                  <span class="input-group-text"><i class="ni ni-email-83"></i></span>
-                              </div>
-                              <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
-                          </div>
-                      </div>
-                  
-                      <div class="form-group">
-                          <div class="input-group input-group-alternative">
-                              <div class="input-group-prepend">
-                                  <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
-                              </div>
-                              <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
-                          </div>
-                      </div>
-                  
-                      <div class="text-center">
-                          <button type="submit" class="btn btn-primary my-4">Ingresar</button>
-                      </div>
-                  </form>                  
-                  
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <div class="input-group input-group-alternative">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="ni ni-single-02"></i></span>
+                                </div>
+                                <input type="text" name="username" class="form-control" placeholder="Nombre de usuario" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="input-group input-group-alternative">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="ni ni-lock-circle-open"></i></span>
+                                </div>
+                                <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary my-4">Ingresar</button>
+                        </div>
+                    </form>                  
                 </div>
             </div>
             <div class="row mt-3">
@@ -60,5 +54,4 @@
         </div>
     </div>
 </div>
-
 {% endblock content %}

@@ -1,26 +1,79 @@
 {% extends 'layouts/base-admin.html' %}
 {% block title %}Formulario de Horario{% endblock %}
+
 {% block content %}
 <div class="d-flex justify-content-center align-items-center vh-100 bg-light">
     <div class="card shadow p-4" style="max-width: 720px; border-radius: 10px; width: 100%;">
         <h4 class="text-center mb-4" style="color: #102c54;">
             {% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Horario
         </h4>
+        <!-- Mostrar el mensaje de error si excede el límite de horas -->
+        {% if error_message %}
+            <div class="alert alert-danger">
+                <strong>{{ error_message }}</strong>
+            </div>
+        {% endif %}
+        
+        <!-- Mostrar el mensaje de solapamiento si existe -->
+        {% if overlap_message %}
+            <div class="alert alert-danger">
+                <strong>{{ overlap_message }}</strong>
+            </div>
+        {% endif %}
         <form method="POST">
             {% csrf_token %}
             <div class="row g-2">
-                {% for field in form %}
                 <div class="col-md-6">
-                    <label class="form-label small">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                    <label class="form-label small">{{ form.asignatura.label }}</label>
+                    <select name="asignatura" class="form-control">
+                        <option value="">Seleccione asignatura</option>
+                        {% for asignatura in asignaturas %}
+                            <option value="{{ asignatura.id }}" {% if form.asignatura.value == asignatura.id %} selected {% endif %}>
+                                {{ asignatura.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.asignatura.errors %}
+                        <div class="text-danger small">{{ form.asignatura.errors|striptags }}</div>
                     {% endif %}
                 </div>
-                {% endfor %}
+                
+                <div class="col-md-6">
+                    <label class="form-label small">{{ form.dia.label }}</label>
+                    <select name="dia" class="form-control">
+                        <option value="">Seleccione día</option>
+                        <option value="lunes" {% if form.dia.value == 'lunes' %} selected {% endif %}>Lunes</option>
+                        <option value="martes" {% if form.dia.value == 'martes' %} selected {% endif %}>Martes</option>
+                        <option value="miercoles" {% if form.dia.value == 'miercoles' %} selected {% endif %}>Miércoles</option>
+                        <option value="jueves" {% if form.dia.value == 'jueves' %} selected {% endif %}>Jueves</option>
+                        <option value="viernes" {% if form.dia.value == 'viernes' %} selected {% endif %}>Viernes</option>
+                        <option value="sabado" {% if form.dia.value == 'sabado' %} selected {% endif %}>Sábado</option>
+                    </select>
+                    {% if form.dia.errors %}
+                        <div class="text-danger small">{{ form.dia.errors|striptags }}</div>
+                    {% endif %}
+                </div>
             </div>
+            
+            <div class="row g-2 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label small">Hora de inicio</label>
+                    <input type="time" name="hora_inicio" class="form-control" value="{{ form.hora_inicio.value }}">
+                    {% if form.hora_inicio.errors %}
+                        <div class="text-danger small">{{ form.hora_inicio.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small">Hora de fin</label>
+                    <input type="time" name="hora_fin" class="form-control" value="{{ form.hora_fin.value }}">
+                    {% if form.hora_fin.errors %}
+                        <div class="text-danger small">{{ form.hora_fin.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
             <div class="d-flex justify-content-between mt-4">
-                <button type="submit" class="btn btn-primary w-50" style="background-color: #102c54;; color: white;">Guardar</button>
+                <button type="submit" class="btn btn-primary w-50" style="background-color: #102c54; color: white;">Guardar</button>
                 <a href="{% url 'horario_list' %}" class="btn btn-secondary w-50">Cancelar</a>
             </div>
         </form>

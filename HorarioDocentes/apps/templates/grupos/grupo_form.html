@@ -1,12 +1,12 @@
 {% extends 'layouts/base-admin.html' %}
 
-{% block title %}Formulario de Grupo{% endblock %}
+{% block title %}Formulario de Cuatrimestre{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-center align-items-center vh-100" style="background-color: #6e6e6e;">
     <div class="card shadow p-4" style="max-width: 500px; border-radius: 10px; width: 100%;">
         <h4 class="text-center mb-4" style="color: #102c54;">
-            {% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Grupo
+            {% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Cuatrimestre
         </h4>
         <form method="POST">
             {% csrf_token %}

@@ -12,15 +12,37 @@
             {% csrf_token %}
             <div class="row g-2">
                 {% for field in form %}
-                    <div class="col-md-4">
-                        <label class="form-label small">{{ field.label }}</label>
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger small">{{ field.errors|striptags }}</div>
-                        {% endif %}
-                    </div>
+                    {% if field.name != "carreras" %}
+                        <div class="col-md-4">
+                            <label class="form-label small">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% endfor %}
             </div>
+
+            <div class="mt-4">
+                <label class="form-label small">Carreras</label>
+                <div class="border rounded p-2" style="max-height: 200px; overflow-y: auto;">
+                    <div class="row">
+                        {% for checkbox in form.carreras %}
+                            <div class="col-md-4">
+                                <div class="form-check mb-1">
+                                    {{ checkbox.tag }}
+                                    <label class="form-check-label small">{{ checkbox.choice_label }}</label>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% if form.carreras.errors %}
+                    <div class="text-danger small mt-1">{{ form.carreras.errors|striptags }}</div>
+                {% endif %}
+            </div>
+            
 
             <div class="d-flex justify-content-between mt-4">
                 <button type="submit" class="btn btn-primary w-50" style="background-color: #102c54;; color: white;">Guardar</button>
@@ -30,4 +52,3 @@
     </div>
 </div>
 {% endblock content %}
-
