@@ -82,12 +82,12 @@ WSGI_APPLICATION = 'HorarioDocentes.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('blwpxbxllyhmkbbhjc1i'),
-        'USER': os.environ.get('uvefwq3h9hx3a4an'),
-        'PASSWORD': os.environ.get('wnnSLHaXfoCOytQgSITM'),
-        'HOST': os.environ.get('blwpxbxllyhmkbbhjc1i-mysql.services.clever-cloud.com'),
-        'PORT': os.environ.get('3306'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'blwpxbxllyhmkbbhjc1i'),
+        'USER': os.environ.get('DB_USER', 'uvefwq3h9hx3a4an'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'wnnSLHaXfoCOytQgSITM'),
+        'HOST': os.environ.get('DB_HOST', 'blwpxbxllyhmkbbhjc1i-mysql.services.clever-cloud.com'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
     }
 }
 
