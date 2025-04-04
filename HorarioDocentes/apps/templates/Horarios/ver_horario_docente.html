@@ -1,0 +1,31 @@
+{% extends 'layouts/base-admin.html' %}
+
+{% block title %}Horario del Docente: {{ docente.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Horario del Docente: {{ docente.nombre }} {{ docente.apellido_paterno }}</h2>
+    
+    {% for horario_docente in horario_docentes %}
+        <h4>Asignatura: {{ horario_docente.asignatura.nombre }}</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Hora Inicio</th>
+                    <th>Hora Fin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for horario in horario_docente.horarios.all %}
+                    <tr>
+                        <td>{{ horario.dia }}</td>
+                        <td>{{ horario.hora_inicio }}</td>
+                        <td>{{ horario.hora_fin }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endfor %}
+</div>
+{% endblock %}

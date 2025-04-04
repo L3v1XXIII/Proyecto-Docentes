@@ -25,9 +25,9 @@ CORE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'django-insecure-)uxb(=ruubb7&xe6o!sbf!s8idx)b7awp*)#9w!j6o3zzh6&a$'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.clever-cloud.com', 'https://app-6a23d68d-b9b8-4f75-8c7c-b23870490e99.cleverapps.io']
 
 
 # Application definition
@@ -82,14 +82,15 @@ WSGI_APPLICATION = 'HorarioDocentes.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'hdn',  # Reemplaza con el nombre de tu base de datos
-        'USER': 'root',  # El usuario predeterminado de MySQL en XAMPP es 'root'
-        'PASSWORD': 'monze023',  # La contraseña predeterminada de MySQL en XAMPP es vacía (puedes cambiarla en phpMyAdmin)
-        'HOST': '127.0.0.1',  # O 'localhost'
-        'PORT': '3306',  # El puerto predeterminado de MySQL
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('blwpxbxllyhmkbbhjc1i'),
+        'USER': os.environ.get('uvefwq3h9hx3a4an'),
+        'PASSWORD': os.environ.get('wnnSLHaXfoCOytQgSITM'),
+        'HOST': os.environ.get('blwpxbxllyhmkbbhjc1i-mysql.services.clever-cloud.com'),
+        'PORT': os.environ.get('3306'),
     }
 }
+
 
 
 # Password validation

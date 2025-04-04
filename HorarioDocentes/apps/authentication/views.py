@@ -816,3 +816,37 @@ def mi_horario_view(request):
         'dias': dias
     })
 
+
+@login_required
+def asignar_docente_a_asignatura(request, asignatura_id):
+    asignatura = get_object_or_404(Asignatura, pk=asignatura_id)
+    docentes = Docente.objects.filter(carrera=asignatura.carrera)
+
+    if request.method == 'POST':
+        docente_id = request.POST.get('docente')  # Seleccionamos un solo docente
+        selected_horarios = request.POST.getlist('horarios')  # Lista de horarios seleccionados
+        
+        docente = get_object_or_404(Docente, id=docente_id)
+        
+        # Crear un objeto HorarioDocente
+        horario_docente = HorarioDocente(docente=docente, asignatura=asignatura)
+        horario_docente.save()  # Guardamos el objeto para obtener un 'id' valido
+        
+        # Asociar los horarios seleccionados a este docente
+        for horario_id in selected_horarios:
+            horario = HorarioAsignatura.objects.get(id=horario_id)
+            horario_docente.horarios.add(horario)
+        
+        # Guardamos los cambios
+        horario_docente.save()
+        
+        messages.success(request, 'Asignación realizada con éxito.')
+        return redirect('ver_horario_docente', docente_id=docente.id)  # Redirigimos al detalle de los horarios
+
+    return render(request, 'Horarios/asignar_docente.html', {'docentes': docentes, 'asignatura': asignatura})
+
+def ver_horario_docente(request, docente_id):
+    docente = get_object_or_404(Docente, id=docente_id)
+    horario_docentes = HorarioDocente.objects.filter(docente=docente)
+
+    return render(request, 'Horarios/ver_horario_docente.html', {'docente': docente, 'horario_docentes': horario_docentes})

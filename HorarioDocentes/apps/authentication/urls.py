@@ -5,7 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 
 from django.urls import path
 from .views import asignatura_create, asignatura_delete, asignatura_list, asignatura_update, carrera_create, carrera_delete, carrera_list, carrera_update, horario_create, horario_delete, horario_list, horario_update, administrador_create, administrador_delete, administrador_list, administrador_update, grupo_create, grupo_delete, grupo_list, grupo_update, disponibilidad_create, disponibilidad_delete, disponibilidad_list, disponibilidad_update, docente_created_success
-from .views import login_view, register_view, logout_view, dashboard, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, perfil_usuario, cambiar_contraseña, admin_created_success, periodo_create, periodo_delete, periodo_list, periodo_update, mi_horario_view, asignatura_list2, docente_list2, carrera_list2
+from .views import login_view, register_view, logout_view, dashboard, superadmin_dashboard, admin_dashboard, docente_dashboard, user_list, user_create, user_delete, user_update, docente_list, docente_create, docente_delete, docente_update, perfil_usuario, cambiar_contraseña, admin_created_success, periodo_create, periodo_delete, periodo_list, periodo_update, mi_horario_view, asignatura_list2, docente_list2, carrera_list2, asignar_docente_a_asignatura, ver_horario_docente
 from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
@@ -74,5 +74,8 @@ urlpatterns = [
     path('asignaturas/<int:carrera_id>/', asignatura_list2, name='asignatura_list'),
     path('docentes/<int:asignatura_id>/', docente_list2, name='docente_list'),
     
-
+    path('asignar_docente/<int:asignatura_id>/', asignar_docente_a_asignatura, name='asignar_docente_a_asignatura'),
+    
+    # Ruta para ver los horarios del docente asignado
+    path('ver_horario_docente/<int:docente_id>/', ver_horario_docente, name='ver_horario_docente'),
 ]
